@@ -3,10 +3,9 @@ ctrl - e : SwitchAudioSource -s "iFi (by AMR) HD USB Audio Output"
 ctrl - r : SwitchAudioSource -s "BenQ EX2780Q"
 
 # Bindings for Cmd + Option (first layer)
-alt - q : open -a Ghostty
-alt - w : open -a "/Applications/Things3.app"
-alt - e : open -a Zen
-alt - r : open -a Obsidian
+alt - q : open -a "/Applications/Things3.app"
+alt - w : open -a Zen 
+alt - e : open -a Ghostty 
 
 alt - a : open -a Finder
 alt - s : open -a "Spark"
