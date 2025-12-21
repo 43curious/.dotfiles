@@ -81,6 +81,9 @@ open_home() {
 # Bind the function to Ctrl+B
 bindkey -s '^H' 'open_home\n'
 
-alias bagheera="ssh castro@bagheera"
-alias serverdown="ssh -t castro@bagheera 'sudo shutdown -h now'"
+alias bagheera="ssh jon@bagheera"
+alias sd="ssh -t jon@bagheera 'sudo shutdown -h now'"
 
+
+# Added by Antigravity
+export PATH="/Users/castro/.antigravity/antigravity/bin:$PATH"
