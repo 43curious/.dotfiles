@@ -4,9 +4,7 @@ export PATH=$HOME/bin:/usr/local/bin:$PATH
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
 
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+autoload -U colors && colors
 
 # Theme
 ZSH_THEME="castro"
@@ -78,12 +76,41 @@ open_home() {
   open "$selection"
 }
 
+function brewsync() {
+    local BREWFILE="$HOME/.dotfiles/brewfile"
+    
+    # Verificar si el archivo existe
+    [[ ! -f "$BREWFILE" ]] && echo "$fg[red] Error: Brewfile no encontrado" && return 1
+
+    # Calcular el hash inicial, abrir Nvim y calcular el hash final
+    local OLD_HASH=$(shasum -a 256 "$BREWFILE")
+    nvim "$BREWFILE"
+    local NEW_HASH=$(shasum -a 256 "$BREWFILE")
+
+    # Comparar y ejecutar si hubo cambios
+    if [[ "$OLD_HASH" != "$NEW_HASH" ]]; then
+        echo "$fg[cyan]✨ Cambios detectados. Sincronizando Brewfile..."
+        
+        # Entrar al directorio para que brew bundle detecte el archivo
+        cd "$(dirname "$BREWFILE")" || return
+        
+        # Ejecutar instalación y limpieza
+        brew bundle --quiet
+        brew bundle cleanup --force --quiet
+        
+        # Volver al directorio anterior
+        cd - > /dev/null
+        echo "$fg[green] Sincronización completada."
+    else
+        echo "No hubo cambios en el archivo. Nada que hacer."
+    fi
+}
+
 # Bind the function to Ctrl+B
 bindkey -s '^H' 'open_home\n'
 
 alias bagheera="ssh jon@bagheera"
 alias sd="ssh -t jon@bagheera 'sudo shutdown -h now'"
-
 
 # Added by Antigravity
 export PATH="/Users/castro/.antigravity/antigravity/bin:$PATH"

@@ -1,0 +1,32 @@
+# CLI tools
+brew "neovim"
+brew "git"
+brew "curl"
+brew "mas"
+brew "stow"
+brew "fzf"
+brew "zig"
+brew "switchaudio-osx"
+brew "zsh-syntax-highlighting"
+brew "zsh-autosuggestions"
+tap "asmvik/formulae"
+brew "asmvik/formulae/skhd"
+
+# GUI Applications
+cask "zen"
+cask "helium-browser"
+cask "qobuz"
+cask "ghostty"
+cask "appcleaner"
+cask "iina"
+cask "obs"
+cask "obsidian"
+cask "qbittorrent"
+cask "ente-auth"
+cask "tailscale-app"
+cask "affinity"
+cask "imageoptim"
+cask "blender"
+
+# Mac App Store
+mas "DaVinci Resolve", id: 571213070
