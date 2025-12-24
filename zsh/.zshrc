@@ -77,28 +77,31 @@ open_home() {
 }
 
 function brewsync() {
+    # Referencia mi brewfile en el directorio de .dotfiles
     local BREWFILE="$HOME/.dotfiles/brewfile"
-
+    
     # Verificar si el archivo existe
-    [[ ! -f "$BREWFILE" ]] && echo "$fg[red] Error: Brewfile no encontrado" && return 1
-
+    [[ ! -f "$BREWFILE" ]] && echo "$fg[red] Error: Brewfile no
+     encontrado" && return 1
+	
     # Calcular el hash inicial, abrir Nvim y calcular el hash final
     local OLD_HASH=$(shasum -a 256 "$BREWFILE")
     nvim "$BREWFILE"
     local NEW_HASH=$(shasum -a 256 "$BREWFILE")
-
+	
     # Comparar y ejecutar si hubo cambios
     if [[ "$OLD_HASH" != "$NEW_HASH" ]]; then
-        echo "$fg[cyan] Cambios detectados. Sincronizando Brewfile..."
-
+        echo "$fg[cyan]Cambios detectados. Sincronizando Brewfile..."
+        
         # Entrar al directorio para que brew bundle detecte el archivo
         cd "$(dirname "$BREWFILE")" || return
-
+        
         # Ejecutar instalación y limpieza
-        brew update 
-        brew upgrade
         brew bundle --quiet
         brew bundle cleanup --force --quiet
+        brew update
+        brew upgrade
+        brew cleanup --prune=all
 
         # Volver al directorio anterior
         cd - > /dev/null
@@ -107,7 +110,6 @@ function brewsync() {
         echo "No hubo cambios en el archivo. Nada que hacer."
     fi
 }
-
 
 # Bind the function to Ctrl+B
 bindkey -s '^H' 'open_home\n'
