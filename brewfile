@@ -16,7 +16,6 @@ brew "asmvik/formulae/skhd"
 cask "helium-browser"
 cask "qobuz"
 cask "ghostty"
-cask "appcleaner"
 cask "iina"
 cask "obs"
 cask "obsidian"
@@ -26,6 +25,8 @@ cask "tailscale-app"
 cask "affinity"
 cask "imageoptim"
 cask "blender"
+cask "appcleaner"
 
 # Mac App Store
 mas "DaVinci Resolve", id: 571213070
+

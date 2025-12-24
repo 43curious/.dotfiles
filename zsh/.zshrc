@@ -78,7 +78,7 @@ open_home() {
 
 function brewsync() {
     local BREWFILE="$HOME/.dotfiles/brewfile"
-    
+
     # Verificar si el archivo existe
     [[ ! -f "$BREWFILE" ]] && echo "$fg[red] Error: Brewfile no encontrado" && return 1
 
@@ -90,16 +90,16 @@ function brewsync() {
     # Comparar y ejecutar si hubo cambios
     if [[ "$OLD_HASH" != "$NEW_HASH" ]]; then
         echo "$fg[cyan] Cambios detectados. Sincronizando Brewfile..."
-        
+
         # Entrar al directorio para que brew bundle detecte el archivo
         cd "$(dirname "$BREWFILE")" || return
-        
+
         # Ejecutar instalación y limpieza
-        brew bundle --quiet
-        brew bundle cleanup --force --quiet
         brew update 
         brew upgrade
- 
+        brew bundle --quiet
+        brew bundle cleanup --force --quiet
+
         # Volver al directorio anterior
         cd - > /dev/null
         echo "$fg[green] Sincronización completada."
@@ -107,6 +107,7 @@ function brewsync() {
         echo "No hubo cambios en el archivo. Nada que hacer."
     fi
 }
+
 
 # Bind the function to Ctrl+B
 bindkey -s '^H' 'open_home\n'
