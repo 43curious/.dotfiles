@@ -95,6 +95,8 @@ function brewsync() {
         cd "$(dirname "$BREWFILE")" || return
         
         # Ejecutar instalación y limpieza
+        brew update 
+        brew upgrade
         brew bundle --quiet
         brew bundle cleanup --force --quiet
         
