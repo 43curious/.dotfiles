@@ -13,7 +13,6 @@ tap "asmvik/formulae"
 brew "asmvik/formulae/skhd"
 
 # GUI Applications
-cask "zen"
 cask "helium-browser"
 cask "qobuz"
 cask "ghostty"

@@ -95,11 +95,11 @@ function brewsync() {
         cd "$(dirname "$BREWFILE")" || return
         
         # Ejecutar instalación y limpieza
-        brew update 
-        brew upgrade
         brew bundle --quiet
         brew bundle cleanup --force --quiet
-        
+        brew update 
+        brew upgrade
+ 
         # Volver al directorio anterior
         cd - > /dev/null
         echo "$fg[green] Sincronización completada."
