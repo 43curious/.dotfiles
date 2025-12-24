@@ -89,7 +89,7 @@ function brewsync() {
 
     # Comparar y ejecutar si hubo cambios
     if [[ "$OLD_HASH" != "$NEW_HASH" ]]; then
-        echo "$fg[cyan]✨ Cambios detectados. Sincronizando Brewfile..."
+        echo "$fg[cyan] Cambios detectados. Sincronizando Brewfile..."
         
         # Entrar al directorio para que brew bundle detecte el archivo
         cd "$(dirname "$BREWFILE")" || return
