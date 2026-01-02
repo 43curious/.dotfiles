@@ -7,9 +7,8 @@ alt - q : open -a "/Applications/Things3.app"
 alt - w : open -a Helium 
 alt - e : open -a Ghostty 
 
+alt - r : open -a Obsidian 
 alt - a : open -a Finder
-alt - s : open -a "Spark"
-alt - d : open -a "Qobuz"
 alt - f : open -a Calendar
 
 # Bindings for Cmd + Shift + Option (second layer)
