@@ -26,7 +26,3 @@ cask "affinity"
 cask "imageoptim"
 cask "blender"
 cask "appcleaner"
-
-# Mac App Store
-mas "DaVinci Resolve", id: 571213070
-

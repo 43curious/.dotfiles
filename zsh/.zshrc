@@ -18,7 +18,7 @@ source $ZSH/oh-my-zsh.sh
 # Script for searching local Development directory for projects
 ff() {
   local dir
-  dir=$(find $HOME/Development -type d -maxdepth 3 ! -name '.*' | fzf)
+  dir=$(find $HOME/Development -type d -maxdepth 1 ! -name '.*' | fzf)
   if [ -n "$dir" ]; then
     cd "$dir" || return
     clear  # Clear the terminal screen
