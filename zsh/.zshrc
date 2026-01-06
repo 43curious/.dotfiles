@@ -107,7 +107,10 @@ function brewsync() {
         cd - > /dev/null
         echo "$fg[green] Sincronización completada."
     else
-        echo "No hubo cambios en el archivo. Nada que hacer."
+        echo "No hubo cambios en el archivo. Actualizando."
+        brew update
+        brew upgrade
+        brew cleanup --prune=all
     fi
 }
 
@@ -117,5 +120,3 @@ bindkey -s '^H' 'open_home\n'
 alias bagheera="ssh jon@bagheera"
 alias sd="ssh -t jon@bagheera 'sudo shutdown -h now'"
 
-# Added by Antigravity
-export PATH="/Users/castro/.antigravity/antigravity/bin:$PATH"
