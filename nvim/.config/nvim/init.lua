@@ -12,7 +12,7 @@ vim.opt.relativenumber = true
 vim.opt.termguicolors = true
 vim.opt.laststatus = 3
 vim.opt.tabstop = 4
-vim.opt.shiftwidth = 4
+vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 vim.opt.fillchars = { eob = " " } 
 vim.opt.clipboard = "unnamedplus" -- Permite copiar/pegar con el sistema (Ctrl+C / Ctrl+V)
