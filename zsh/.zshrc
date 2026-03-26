@@ -7,8 +7,53 @@ export ZSH=$HOME/.oh-my-zsh
 autoload -U colors && colors
 
 # Theme
-ZSH_THEME="castro"
+_git_branch() {
+  git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
+}
 
+_git_dirty() {
+  if git rev-parse --is-inside-work-tree &>/dev/null; then
+    if ! git diff --quiet 2>/dev/null; then
+      echo "unstaged"
+    elif ! git diff --cached --quiet 2>/dev/null; then
+      echo "staged"
+    fi
+  fi
+}
+
+_build_prompt() {
+  local arrow=$'\ue0b0'
+  local branch_icon=$'\ue729'
+  local real_path="${PWD/#$HOME/~}"
+  local branch=$(_git_branch)
+  local dirty=$(_git_dirty)
+  local p=""
+
+  p+="%K{#34373C}%F{#ffffff} ${real_path} "
+
+  if [[ -n "$branch" ]]; then
+    p+="%F{#34373C}%K{#5aa9e6}${arrow}"
+    if [[ "$dirty" == "unstaged" ]]; then
+      p+="%F{#0D2B3E} ${branch_icon}%F{#0d2b3e} ${branch} "
+    else
+      p+="%F{#0d2b3e} ${branch_icon} ${branch} "
+    fi
+    p+="%k%F{#5aa9e6}${arrow}"
+  else
+    p+="%F{#34373C}%K{#5aa9e6}${arrow}"
+    p+="%k%F{#5aa9e6}${arrow}"
+  fi
+
+  p+="%k%f "
+  echo "$p"
+}
+
+setopt PROMPT_SUBST
+ZSH_THEME=""
+PROMPT='$(_build_prompt)'
+
+
+# Plugins
 plugins=(git
 )
 source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -24,58 +69,10 @@ ff() {
     clear  # Clear the terminal screen
   fi
 }
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
 bindkey -s '^F' 'ff\n'
 
-# Function to open a file or folder from the external drive CZM2
-open_czm2() {
-  local drive_path="/Volumes/CZM2"
-
-  # Check if the external drive is mounted
-  if [[ ! -d "$drive_path" ]]; then
-    echo "Drive CZM2 is not mounted."
-    return 1
-  fi
-
-  # Use find to list files and folders (max depth 3), excluding system files
-  local selection
-  selection=$(find "$drive_path" -maxdepth 1\
-    ! -path "*/.*" ! -name ".DS_Store" 2>/dev/null | fzf --prompt="Select a file or folder: ")
-
-  # If nothing was selected, exit
-  [[ -z "$selection" ]] && return 1
-  
-  # Clear the terminal session
-  clear
-
-  # Open the selected file or folder
-  open "$selection"
-}
-
-# Bind the function to Ctrl+B
-bindkey -s '^B' 'open_czm2\n'
-
-# Function to open a file or folder from the external drive CZM2
-open_home() {
-  local drive_path="$HOME"
-
-  # Use find to list files and folders (max depth 3), excluding system files
-  local selection
-  selection=$(find "$drive_path" -maxdepth 3 -mindepth 1 \
-    ! -path "*/.*" ! -name ".DS_Store" 2>/dev/null | fzf --prompt="Select a file or folder: ")
-
-  # If nothing was selected, exit
-  [[ -z "$selection" ]] && return 1
-  
-  # Clear the terminal session
-  clear
-
-  # Open the selected file or folder
-  open "$selection"
-}
-
+# Brewsync
 function brewsync() {
     # Referencia mi brewfile en el directorio de .dotfiles
     local BREWFILE="$HOME/.dotfiles/brewfile"
@@ -114,9 +111,9 @@ function brewsync() {
     fi
 }
 
-# Bind the function to Ctrl+B
-bindkey -s '^H' 'open_home\n'
-
+#Alias
 alias bagheera="ssh jon@bagheera"
 alias sd="ssh -t jon@bagheera 'sudo shutdown -h now'"
 
+# Added by Antigravity
+export PATH="/Users/jon/.antigravity/antigravity/bin:$PATH"
