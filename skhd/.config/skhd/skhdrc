@@ -1,6 +1,7 @@
 # Volume quick-switch toggle
 ctrl - e : SwitchAudioSource -s "iFi (by AMR) HD USB Audio Output"
 ctrl - r : SwitchAudioSource -s "BenQ EX2780Q"
+ctrl - t : ~/.dotfiles/scripts/toggle-tailscale.sh
 
 # Bindings for Cmd + Option (first layer)
 alt - q : open -a "/Applications/Things3.app"
