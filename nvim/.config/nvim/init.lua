@@ -30,8 +30,30 @@ require("lazy").setup({
     },
     {
         'nvim-treesitter/nvim-treesitter',
+        branch = 'master',
         lazy = false,
-        build = ':TSUpdate'
+        build = ':TSUpdate',
+        config = function()
+            local ok_legacy, legacy_configs = pcall(require, 'nvim-treesitter.configs')
+            if ok_legacy then
+                legacy_configs.setup({
+                    ensure_installed = { "lua", "vim", "vimdoc" },
+                    sync_install = false,
+                    auto_install = true,
+                })
+                return
+            end
+
+            local ok_new, treesitter = pcall(require, 'nvim-treesitter')
+            if ok_new then
+                treesitter.setup({})
+                return
+            end
+
+            vim.schedule(function()
+                vim.notify("nvim-treesitter no se pudo cargar", vim.log.levels.WARN)
+            end)
+        end
     },
 
     {
@@ -75,7 +97,7 @@ require("lazy").setup({
     -- TELESCOPE (Fuzzy Finder)
     {
         'nvim-telescope/telescope.nvim', 
-        tag = '0.1.5',
+        branch = '0.1.x',
         dependencies = { 'nvim-lua/plenary.nvim' },
         config = function()
             local builtin = require('telescope.builtin')
