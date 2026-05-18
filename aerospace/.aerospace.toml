@@ -1,0 +1,32 @@
+# ctrl  → workspaces
+# alt   → apps
+# alt + shift → window management
+
+# --- General ---
+start-at-login = true
+accordion-padding = 0
+[mode.main.binding]
+
+# WORKSPACES — ctrl
+ctrl-1 = "workspace 1"
+ctrl-2 = "workspace 2"
+ctrl-3 = "workspace 3"
+
+# Move window to workspace
+ctrl-shift-1 = "move-node-to-workspace 1"
+ctrl-shift-2 = "move-node-to-workspace 2"
+ctrl-shift-3 = "move-node-to-workspace 3"
+
+# WINDOW FOCUS — alt + shift
+
+# Focus
+ctrl-j= "focus left"
+ctrl-k= "focus right"
+
+# Layout
+ctrl-o = "layout tiles"
+ctrl-p = "layout accordion"
+
+ctrl-e = 'exec-and-forget SwitchAudioSource -s "iFi (by AMR) HD USB Audio Output"'
+ctrl-r = 'exec-and-forget SwitchAudioSource -s "BenQ EX2780Q"'
+ctrl-t = 'exec-and-forget ~/.dotfiles/scripts/toggle-tailscale.sh'
