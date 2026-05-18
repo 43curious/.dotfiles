@@ -1,5 +1,7 @@
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH="$HOME/.emacs.d/bin:$PATH"
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
@@ -13,10 +15,8 @@ _git_branch() {
 
 _git_dirty() {
   if git rev-parse --is-inside-work-tree &>/dev/null; then
-    if ! git diff --quiet 2>/dev/null; then
-      echo "unstaged"
-    elif ! git diff --cached --quiet 2>/dev/null; then
-      echo "staged"
+    if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+      echo "dirty"
     fi
   fi
 }
@@ -27,18 +27,19 @@ _build_prompt() {
   local real_path="${PWD/#$HOME/~}"
   local branch=$(_git_branch)
   local dirty=$(_git_dirty)
+  local branch_bg="#5aa9e6"
   local p=""
+
+  if [[ -n "$dirty" ]]; then
+    branch_bg="#957fef"
+  fi
 
   p+="%K{#34373C}%F{#ffffff} ${real_path} "
 
   if [[ -n "$branch" ]]; then
-    p+="%F{#34373C}%K{#5aa9e6}${arrow}"
-    if [[ "$dirty" == "unstaged" ]]; then
-      p+="%F{#0D2B3E} ${branch_icon}%F{#0d2b3e} ${branch} "
-    else
-      p+="%F{#0d2b3e} ${branch_icon} ${branch} "
-    fi
-    p+="%k%F{#5aa9e6}${arrow}"
+    p+="%F{#34373C}%K{${branch_bg}}${arrow}"
+    p+="%F{#0d2b3e} ${branch_icon} ${branch} "
+    p+="%k%F{${branch_bg}}${arrow}"
   else
     p+="%F{#34373C}%K{#5aa9e6}${arrow}"
     p+="%k%F{#5aa9e6}${arrow}"
@@ -63,9 +64,10 @@ source $ZSH/oh-my-zsh.sh
 # Script for searching local Development directory for projects
 ff() {
   local dir
-  dir=$(find $HOME/Development -type d -maxdepth 1 ! -name '.*' | fzf)
+  dir=$(find $HOME/Development -type d -maxdepth 1 ! -name '.*' | fzf --style minimal)
   if [ -n "$dir" ]; then
     cd "$dir" || return
+    nvim . || return
     clear  # Clear the terminal screen
   fi
 }
@@ -117,3 +119,94 @@ alias sd="ssh -t jon@bagheera 'sudo shutdown -h now'"
 
 # Added by Antigravity
 export PATH="/Users/jon/.antigravity/antigravity/bin:$PATH"
+
+# Added by Antigravity
+export PATH="/Users/jon/.antigravity/antigravity/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+# Added by Antigravity
+export PATH="/Users/jon/.antigravity/antigravity/bin:$PATH"
+
+# bun completions
+[ -s "/Users/jon/.bun/_bun" ] && source "/Users/jon/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# --- Ghostty/Zsh Dired-like browser: BEGIN ---
+# Usage: dired [start-directory]
+# - Enter on a directory descends into it, like Dired browsing.
+# - Enter on a file opens it in Neovim.
+# - Ctrl-v opens the current directory in Neovim.
+# - Ctrl-o opens selection with macOS `open`.
+# - Esc/Ctrl-c quits.
+dired() {
+  emulate -L zsh
+  setopt local_options no_nomatch
+
+  local dir="${1:-$PWD}"
+  local choice name target action
+
+  dir="${dir:A}"
+  [[ -d "$dir" ]] || { echo "dired: not a directory: $dir" >&2; return 1; }
+
+  while true; do
+    choice=$(
+      {
+        [[ "$dir" != "/" ]] && print -- "../"
+        command find "$dir" -maxdepth 1 -mindepth 1 \( -name .git -o -name node_modules \) -prune -o -print 2>/dev/null |
+          while IFS= read -r path; do
+            name="${path:t}"
+            [[ -d "$path" ]] && print -- "$name/" || print -- "$name"
+          done | LC_ALL=C sort -f
+      } | DIRED_DIR="$dir" fzf \
+        --prompt="Dired ${dir/#$HOME/~}/ " \
+        --height=100% \
+        --reverse \
+        --expect=enter,ctrl-v,ctrl-o \
+        --preview='
+          sel="{}"
+          p="$DIRED_DIR/${sel%/}"
+          [[ "$sel" == "../" ]] && p="$DIRED_DIR/.."
+          if [[ -d "$p" ]]; then
+            command eza -la --icons "$p" 2>/dev/null || command ls -la "$p"
+          else
+            command bat --style=numbers --color=always --line-range=:200 "$p" 2>/dev/null || command sed -n "1,200p" "$p"
+          fi
+        '
+    ) || return
+
+    action="${choice%%$'\n'*}"
+    name="${choice#*$'\n'}"
+    [[ -z "$name" ]] && return
+
+    if [[ "$name" == "../" ]]; then
+      target="${dir:h}"
+    else
+      target="$dir/${name%/}"
+    fi
+
+    case "$action" in
+      ctrl-v)
+        nvim "$dir"
+        return
+        ;;
+      ctrl-o)
+        open "$target" >/dev/null 2>&1
+        continue
+        ;;
+    esac
+
+    if [[ -d "$target" ]]; then
+      dir="${target:A}"
+    else
+      nvim "$target"
+      return
+    fi
+  done
+}
+
+# Optional keybinding, Emacs-style: Ctrl-x Ctrl-d launches the Dired-like browser.
+bindkey -s '^X^D' 'dired\n'
+# --- Ghostty/Zsh Dired-like browser: END ---
