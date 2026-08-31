@@ -9,62 +9,22 @@ export ZSH=$HOME/.oh-my-zsh
 autoload -U colors && colors
 
 # Theme
-_git_branch() {
-  git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
-}
-
-_git_dirty() {
-  if git rev-parse --is-inside-work-tree &>/dev/null; then
-    if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
-      echo "dirty"
-    fi
-  fi
-}
-
-_build_prompt() {
-  local arrow=$'\ue0b0'
-  local branch_icon=$'\ue729'
-  local real_path="${PWD/#$HOME/~}"
-  local branch=$(_git_branch)
-  local dirty=$(_git_dirty)
-  local branch_bg="#5aa9e6"
-  local p=""
-
-  if [[ -n "$dirty" ]]; then
-    branch_bg="#957fef"
-  fi
-
-  p+="%K{#34373C}%F{#ffffff} ${real_path} "
-
-  if [[ -n "$branch" ]]; then
-    p+="%F{#34373C}%K{${branch_bg}}${arrow}"
-    p+="%F{#0d2b3e} ${branch_icon} ${branch} "
-    p+="%k%F{${branch_bg}}${arrow}"
-  else
-    p+="%F{#34373C}%K{#5aa9e6}${arrow}"
-    p+="%k%F{#5aa9e6}${arrow}"
-  fi
-
-  p+="%k%f "
-  echo "$p"
-}
-
-setopt PROMPT_SUBST
+# Fast prompt: only uses zsh prompt escapes, no command substitution and no git calls.
 ZSH_THEME=""
-PROMPT='$(_build_prompt)'
+PROMPT='%K{#34373C}%F{#ffffff} %~ %k%f '
 
 
 # Plugins
-plugins=(git
+plugins=(
+  zsh-syntax-highlighting
+  zsh-autosuggestions
 )
-source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $ZSH/oh-my-zsh.sh
 
 # Script for searching local Development directory for projects
 ff() {
   local dir
-  dir=$(find $HOME/Development -type d -maxdepth 1 ! -name '.*' | fzf --style minimal)
+  dir=$(find $HOME/Dev -type d -maxdepth 1 ! -name '.*' | fzf --style minimal)
   if [ -n "$dir" ]; then
     cd "$dir" || return
     nvim . || return
@@ -117,18 +77,12 @@ function brewsync() {
 alias bagheera="ssh jon@bagheera"
 alias sd="ssh -t jon@bagheera 'sudo shutdown -h now'"
 
-# Added by Antigravity
-export PATH="/Users/jon/.antigravity/antigravity/bin:$PATH"
-
-# Added by Antigravity
-export PATH="/Users/jon/.antigravity/antigravity/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-
-# Added by Antigravity
-export PATH="/Users/jon/.antigravity/antigravity/bin:$PATH"
+# Local tools
+[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
+[[ -d "$HOME/.antigravity/antigravity/bin" ]] && export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
 
 # bun completions
-[ -s "/Users/jon/.bun/_bun" ] && source "/Users/jon/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
@@ -210,3 +164,144 @@ dired() {
 # Optional keybinding, Emacs-style: Ctrl-x Ctrl-d launches the Dired-like browser.
 bindkey -s '^X^D' 'dired\n'
 # --- Ghostty/Zsh Dired-like browser: END ---
+
+# --- tmux session shortcuts: BEGIN ---
+# Interactive commands: tattach, tnew, tswitch, trename, tdetach,
+# tremove, and tlast. Short forms: ta, tn, ts, tc/td, tk, and tl.
+_tmux_pick_session() {
+  emulate -L zsh
+
+  command -v tmux >/dev/null 2>&1 || {
+    print -u2 -- 'tmux is not installed'
+    return 127
+  }
+  command -v fzf >/dev/null 2>&1 || {
+    print -u2 -- 'fzf is not installed'
+    return 127
+  }
+  command tmux list-sessions >/dev/null 2>&1 || {
+    print -u2 -- 'No tmux sessions are running'
+    return 1
+  }
+
+  command tmux list-sessions -F '#S' |
+    command fzf --prompt='tmux session > ' --reverse --border
+}
+
+_tmux_attach_or_switch() {
+  emulate -L zsh
+  local session="$1"
+
+  if [[ -n "${TMUX:-}" ]]; then
+    command tmux switch-client -t "=$session"
+  else
+    command tmux attach-session -t "=$session"
+  fi
+}
+
+tattach() {
+  emulate -L zsh
+  local session="${1:-}"
+
+  [[ -n "$session" ]] || session="$(_tmux_pick_session)" || return
+  _tmux_attach_or_switch "$session"
+}
+
+tswitch() {
+  tattach "$@"
+}
+
+tnew() {
+  emulate -L zsh
+  local name="${1:-}"
+
+  if [[ -z "$name" ]]; then
+    read "name?New tmux session name: "
+  fi
+  [[ -n "$name" ]] || return 1
+
+  if command tmux has-session -t "=$name" 2>/dev/null; then
+    _tmux_attach_or_switch "$name"
+  elif [[ -n "${TMUX:-}" ]]; then
+    command tmux new-session -d -s "$name" &&
+      command tmux switch-client -t "=$name"
+  else
+    command tmux new-session -s "$name"
+  fi
+}
+
+trename() {
+  emulate -L zsh
+  local target new_name="${1:-}"
+
+  if [[ -n "${TMUX:-}" ]]; then
+    target="$(command tmux display-message -p '#S')" || return
+  else
+    target="$(_tmux_pick_session)" || return
+  fi
+  if [[ -z "$new_name" ]]; then
+    read "new_name?New name for $target: "
+  fi
+  [[ -n "$new_name" ]] || return 1
+
+  command tmux rename-session -t "=$target" "$new_name"
+}
+
+tdetach() {
+  emulate -L zsh
+  [[ -n "${TMUX:-}" ]] || {
+    print -u2 -- 'Not currently inside tmux'
+    return 1
+  }
+  command tmux detach-client
+}
+
+tremove() {
+  emulate -L zsh
+  local session="${1:-}" answer
+
+  [[ -n "$session" ]] || session="$(_tmux_pick_session)" || return
+  read -q "answer?Remove tmux session '$session'? [y/N] "
+  print
+  [[ "$answer" == [yY] ]] || return 1
+  command tmux kill-session -t "=$session"
+}
+
+tlast() {
+  emulate -L zsh
+  if [[ -n "${TMUX:-}" ]]; then
+    command tmux switch-client -l
+  else
+    tattach
+  fi
+}
+
+alias ta='tattach'
+alias tn='tnew'
+alias ts='tswitch'
+alias tc='tdetach'
+alias td='tdetach'
+alias tk='tremove'
+alias tl='tlast'
+
+# Matching direct Ctrl shortcuts at a normal Zsh prompt. Inside tmux, tmux
+# intercepts these keys first, so they also work while pi or another app runs.
+_tmux_zle_switch() { BUFFER='tswitch'; zle accept-line; }
+_tmux_zle_rename() { BUFFER='trename'; zle accept-line; }
+_tmux_zle_open() { BUFFER='tnew'; zle accept-line; }
+_tmux_zle_remove() { BUFFER='tremove'; zle accept-line; }
+_tmux_zle_reattach() { BUFFER='tlast'; zle accept-line; }
+
+zle -N _tmux_zle_switch
+zle -N _tmux_zle_rename
+zle -N _tmux_zle_open
+zle -N _tmux_zle_remove
+zle -N _tmux_zle_reattach
+
+bindkey '^S' _tmux_zle_switch
+bindkey '^T' _tmux_zle_rename
+bindkey '^O' _tmux_zle_open
+bindkey '^K' _tmux_zle_remove
+bindkey '^A' _tmux_zle_reattach
+# Ctrl-d keeps its normal EOF behavior outside tmux; inside tmux it detaches.
+# --- tmux session shortcuts: END ---
