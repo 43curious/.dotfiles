@@ -30,8 +30,8 @@ precmd() {
   fi
 }
 
-PROMPT='%F{12}%~%f${git_prompt}
-%F{13}❯%f '
+PROMPT='%F{14}%~%f${git_prompt}
+%F{14}❯%f '
 
 
 # Plugins
