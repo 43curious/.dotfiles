@@ -23,7 +23,7 @@ precmd() {
     if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
       git_prompt=" %F{9}${vcs_info_msg_0_}%f"
     else
-      git_prompt=" %F{9}${vcs_info_msg_0_}%f"
+      git_prompt=" %F{8}${vcs_info_msg_0_}%f"
     fi
   else
     git_prompt=""
