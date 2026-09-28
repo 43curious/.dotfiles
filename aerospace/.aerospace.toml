@@ -39,3 +39,41 @@ ctrl-w = "layout accordion"
 ctrl-e = 'exec-and-forget SwitchAudioSource -s "iFi (by AMR) HD USB Audio Output"'
 ctrl-r = 'exec-and-forget SwitchAudioSource -s "Altavoces del MacBook Pro"'
 ctrl-t = 'exec-and-forget ~/.dotfiles/scripts/toggle-tailscale.sh'
+
+## Workspace rules. When X app opens = go to Y workspace.
+
+# Ghostty
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = ['move-node-to-workspace 1']
+
+# Zen
+[[on-window-detected]]
+if.app-id = 'app.zen-browser.zen'
+run = ['move-node-to-workspace 2']
+
+# Calendar
+[[on-window-detected]]
+if.app-id = 'com.apple.iCal'
+run = ['move-node-to-workspace 3']
+
+
+# Obsidian
+[[on-window-detected]]
+if.app-id = 'md.obsidian'
+run = ['move-node-to-workspace 4']
+
+# Qobuz
+[[on-window-detected]]
+if.app-id = 'com.qobuz.desktop'
+run = ['move-node-to-workspace 5']
+
+# Safari
+[[on-window-detected]]
+if.app-id = 'com.apple.Safari'
+run = ['move-node-to-workspace 6']
+
+# Logic
+[[on-window-detected]]
+if.app-id = 'com.apple.mobilelogic'
+run = ['move-node-to-workspace 7']
