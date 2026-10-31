@@ -24,7 +24,14 @@ return {
       opts.options = opts.options or {}
       opts.options.component_separators = ""
       opts.options.section_separators = ""
-      opts.options.theme = vim.env.REX_BLOCK and "16color" or "auto"
+      opts.options.theme = "auto"
+      if vim.env.REX_BLOCK then
+        local theme = vim.deepcopy(require("lualine.themes.16color"))
+        -- ANSI black can differ from Rex's default background.
+        theme.normal.c = { fg = "NONE", bg = "NONE" }
+        theme.inactive.c = { fg = "NONE", bg = "NONE" }
+        opts.options.theme = theme
+      end
 
       opts.sections = opts.sections or {}
       opts.sections.lualine_a = {
