@@ -20,7 +20,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "evergarden",
+      colorscheme = vim.env.REX_BLOCK and "default" or "evergarden",
     },
   },
 }

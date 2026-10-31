@@ -24,7 +24,7 @@ return {
       opts.options = opts.options or {}
       opts.options.component_separators = ""
       opts.options.section_separators = ""
-      opts.options.theme = "auto"
+      opts.options.theme = vim.env.REX_BLOCK and "16color" or "auto"
 
       opts.sections = opts.sections or {}
       opts.sections.lualine_a = {
