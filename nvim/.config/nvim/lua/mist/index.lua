@@ -3,7 +3,7 @@ local parser = require("mist.parser")
 
 local M = {}
 local tasks_by_file = {}
-local all_tasks = {}
+local all_tasks = nil
 local augroup = nil
 
 local function rebuild_flat()
@@ -94,25 +94,36 @@ function M.build(done)
   end
 end
 
+-- Build on the first query instead of scanning the vault on every editor launch.
+local function ensure_index()
+  if not all_tasks then
+    M.build_lua()
+  end
+end
+
 function M.update_file(file)
   file = vim.fs.normalize(vim.fn.expand(file))
   if not config.is_vault_markdown(file) then
     return
   end
+  ensure_index()
   tasks_by_file[file] = parser.parse_file(file, config.vault())
   rebuild_flat()
 end
 
 function M.tasks()
+  ensure_index()
   return vim.deepcopy(all_tasks)
 end
 
 function M.file_tasks(file)
+  ensure_index()
   file = vim.fs.normalize(file)
   return vim.deepcopy(tasks_by_file[file] or {})
 end
 
 function M.query(fn)
+  ensure_index()
   local out = {}
   for _, task in ipairs(all_tasks) do
     if not fn or fn(task) then
@@ -123,6 +134,7 @@ function M.query(fn)
 end
 
 function M.counts(today)
+  ensure_index()
   today = today or config.today()
   local counts = { inbox = 0, today = 0, overdue = 0 }
   local inbox = config.inbox_path()

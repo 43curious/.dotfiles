@@ -2,6 +2,7 @@ return {
   {
     "everviolet/nvim",
     name = "evergarden",
+    lazy = true,
     priority = 1000,
     opts = {
       theme = {
@@ -20,7 +21,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = vim.env.REX_BLOCK and "default" or "evergarden",
+      colorscheme = vim.g.rex_terminal and "default" or "evergarden",
     },
   },
 }

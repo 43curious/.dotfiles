@@ -41,11 +41,3 @@ end, { desc = "Refresh Mist index" })
 vim.api.nvim_create_user_command("MistReveal", function()
   mist.reveal()
 end, { desc = "Toggle Mist metadata conceal" })
-
-vim.api.nvim_create_autocmd("VimEnter", {
-  group = vim.api.nvim_create_augroup("mist_plugin_startup", { clear = true }),
-  once = true,
-  callback = function()
-    require("mist.index").build()
-  end,
-})

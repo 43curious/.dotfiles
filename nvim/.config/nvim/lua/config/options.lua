@@ -2,7 +2,8 @@
 -- LazyVim defaults: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 
 -- Use Rex's live terminal palette instead of fixed RGB colors.
-if vim.env.REX_BLOCK then
+vim.g.rex_terminal = (vim.env.REX_BLOCK or "") ~= "" or vim.env.TERM == "xterm-rex"
+if vim.g.rex_terminal then
   vim.opt.termguicolors = false
 end
 

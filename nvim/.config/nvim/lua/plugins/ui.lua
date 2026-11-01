@@ -25,7 +25,7 @@ return {
       opts.options.component_separators = ""
       opts.options.section_separators = ""
       opts.options.theme = "auto"
-      if vim.env.REX_BLOCK then
+      if vim.g.rex_terminal then
         local theme = vim.deepcopy(require("lualine.themes.16color"))
         -- ANSI black can differ from Rex's default background.
         theme.normal.c = { fg = "NONE", bg = "NONE" }
@@ -231,7 +231,8 @@ return {
         local width = math.max(1, math.min(60, win_width - 2))
         self.opts.width = width
 
-        local header = width >= 60 and lazyvim_header or (width >= 24 and compact_header or (width >= 7 and "LazyVim" or "LV"))
+        local header = width >= 60 and lazyvim_header
+          or (width >= 24 and compact_header or (width >= 7 and "LazyVim" or "LV"))
 
         return {
           { header = header, align = "center", padding = win_height >= 14 and 2 or 0 },
