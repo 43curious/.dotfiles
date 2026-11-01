@@ -42,14 +42,14 @@ ctrl-t = 'exec-and-forget ~/.dotfiles/scripts/toggle-tailscale.sh'
 
 ## Workspace rules. When X app opens = go to Y workspace.
 
-# Ghostty
+# Rex
 [[on-window-detected]]
-if.app-id = 'com.mitchellh.ghostty'
+if.app-id = 'com.superlogical.rex'
 run = ['move-node-to-workspace 1']
 
 # Zen
 [[on-window-detected]]
-if.app-id = 'app.zen-browser.zen'
+if.app-id = 'app.zen-browser.ze1'
 run = ['move-node-to-workspace 2']
 
 # Calendar
@@ -77,3 +77,7 @@ run = ['move-node-to-workspace 6']
 [[on-window-detected]]
 if.app-id = 'com.apple.mobilelogic'
 run = ['move-node-to-workspace 7']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.FaceTime'
+run = 'layout floating'
