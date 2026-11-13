@@ -67,6 +67,11 @@ run = ['move-node-to-workspace 4']
 if.app-id = 'com.qobuz.desktop'
 run = ['move-node-to-workspace 5']
 
+# Helium
+[[on-window-detected]]
+if.app-id = 'net.imput.helium'
+run = ['move-node-to-workspace 5']
+
 # Safari
 [[on-window-detected]]
 if.app-id = 'com.apple.Safari'
@@ -76,6 +81,16 @@ run = ['move-node-to-workspace 6']
 [[on-window-detected]]
 if.app-id = 'com.apple.mobilelogic'
 run = ['move-node-to-workspace 7']
+
+# DaVinci Resolve
+[[on-window-detected]]
+if.app-id = 'com.blackmagic-design.DaVinciResolve'
+run = ['move-node-to-workspace 8']
+
+# WaveSearch
+[[on-window-detected]]
+if.app-id = 'SPL.WaveSearch'
+run = ['move-node-to-workspace 9']
 
 [[on-window-detected]]
 if.app-id = 'com.apple.FaceTime'
