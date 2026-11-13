@@ -15,6 +15,8 @@ ctrl-4 = "workspace 4"
 ctrl-5 = "workspace 5"
 ctrl-6 = "workspace 6"
 ctrl-7 = "workspace 7"
+ctrl-8 = "workspace 8"
+ctrl-9 = "workspace 9"
 
 
 # Move window to workspace
@@ -25,18 +27,21 @@ ctrl-shift-4 = "move-node-to-workspace 4"
 ctrl-shift-5 = "move-node-to-workspace 5"
 ctrl-shift-6 = "move-node-to-workspace 6"
 ctrl-shift-7 = "move-node-to-workspace 7"
+ctrl-shift-8 = "move-node-to-workspace 8"
+ctrl-shift-9 = "move-node-to-workspace 9"
+
 
 # WINDOW FOCUS — alt + shift
 
 # Focus
-ctrl-j= "focus left"
-ctrl-k= "focus right"
+ctrl-j= "focus down"
+ctrl-k= "focus up"
 
 # Layout
 ctrl-q = "layout tiles"
 ctrl-w = "layout accordion"
 
-ctrl-e = 'exec-and-forget SwitchAudioSource -s "iFi (by AMR) HD USB Audio Output"'
+ctrl-e = 'exec-and-forget SwitchAudioSource -s "EarPods"'
 ctrl-r = 'exec-and-forget SwitchAudioSource -s "Altavoces del MacBook Pro"'
 
 ## Workspace rules. When X app opens = go to Y workspace.
