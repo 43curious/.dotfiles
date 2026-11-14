@@ -40,43 +40,16 @@ plugins=(
 )
 source $ZSH/oh-my-zsh.sh
 
-# Brewsync
+# Install missing Brewfile packages and upgrade declared tools.
 function brewsync() {
-    # Referencia mi brewfile en el directorio de .dotfiles
-    local BREWFILE="$HOME/.dotfiles/brewfile"
-    
-    # Verificar si el archivo existe
-    [[ ! -f "$BREWFILE" ]] && echo "$fg[red] Error: Brewfile no
-     encontrado" && return 1
-	
-    # Calcular el hash inicial, abrir Nvim y calcular el hash final
-    local OLD_HASH=$(shasum -a 256 "$BREWFILE")
-    nvim "$BREWFILE"
-    local NEW_HASH=$(shasum -a 256 "$BREWFILE")
-	
-    # Comparar y ejecutar si hubo cambios
-    if [[ "$OLD_HASH" != "$NEW_HASH" ]]; then
-        echo "$fg[cyan]Cambios detectados. Sincronizando Brewfile..."
-        
-        # Entrar al directorio para que brew bundle detecte el archivo
-        cd "$(dirname "$BREWFILE")" || return
-        
-        # Ejecutar instalación y limpieza
-        brew bundle --quiet
-        brew bundle cleanup --force --quiet
-        brew update
-        brew upgrade
-        brew cleanup --prune=all
+    local brewfile="$HOME/.dotfiles/brewfile"
 
-        # Volver al directorio anterior
-        cd - > /dev/null
-        echo "$fg[green] Sincronización completada."
-    else
-        echo "No hubo cambios en el archivo. Actualizando."
-        brew update
-        brew upgrade
-        brew cleanup --prune=all
+    if [[ ! -f "$brewfile" ]]; then
+        print -u2 -- "Error: Brewfile no encontrado: $brewfile"
+        return 1
     fi
+
+    brew bundle install --file="$brewfile"
 }
 
 #Alias

@@ -53,7 +53,7 @@ run = ['move-node-to-workspace 1']
 
 # Zen
 [[on-window-detected]]
-if.app-id = 'app.zen-browser.ze1'
+if.app-id = 'app.zen-browser.zen'
 run = ['move-node-to-workspace 2']
 
 # Calendar
