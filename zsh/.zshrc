@@ -40,7 +40,7 @@ plugins=(
 )
 source $ZSH/oh-my-zsh.sh
 
-# Install missing Brewfile packages and upgrade declared tools.
+# Edit the Brewfile, update Homebrew, then reconcile installed packages.
 function brewsync() {
     local brewfile="$HOME/.dotfiles/brewfile"
 
@@ -49,7 +49,12 @@ function brewsync() {
         return 1
     fi
 
-    brew bundle install --file="$brewfile"
+    nvim "$brewfile" || return
+    brew update || return
+    brew bundle install --upgrade --file="$brewfile" || return
+
+    # Keep required dependencies; remove undeclared Homebrew packages and taps.
+    brew bundle cleanup --force --formula --cask --tap --file="$brewfile"
 }
 
 #Alias

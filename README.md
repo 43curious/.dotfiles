@@ -14,6 +14,25 @@ My dotfiles have the config for the following:
 - [neovim ](https://neovim.io/) theme and plugins 
 - My [SKHD](https://github.com/koekeishiya/skhd) config for navigation
 
+## Homebrew
+
+[`brewfile`](brewfile) declares the Homebrew packages to keep. Run `brewsync` to:
+
+1. Open the file in Neovim. Save and quit with `:wq` to continue.
+2. Update Homebrew itself and its package definitions with `brew update`.
+3. Install missing packages and upgrade declared packages with `brew bundle install --upgrade`.
+4. Remove Homebrew formulae, casks, and taps absent from the file with `brew bundle cleanup --force`, keeping dependencies required by declared packages.
+
+Use `brew "name"`, `cask "name"`, and `tap "owner/repo"` entries for tools, apps,
+and additional repositories. Cleanup is limited to Homebrew packages and taps;
+other package managers are outside this sync.
+
+Exit Neovim with `:cq` to cancel before changing installed packages. Each step
+stops on failure, so cleanup only runs after installation succeeds. Quitting
+with `:q!` continues using the file already saved on disk.
+
+See the [Homebrew Bundle documentation](https://docs.brew.sh/Brew-Bundle-and-Brewfile).
+
 ## Rex
 
 The `rex` Stow package tracks [init.lua](rex/.config/rex/init.lua). Install it with:
