@@ -57,6 +57,34 @@ function brewsync() {
     brew bundle cleanup --force --formula --cask --tap --file="$brewfile"
 }
 
+# Copy CZM2's contents to Bagheera over SSH; pass --dry-run to preview.
+function pewtersync() {
+    local source_dir="/Volumes/CZM2"
+    local rsync_bin=rsync
+
+    if [[ ! -d "$source_dir" || "$(/sbin/mount)" != *" on $source_dir ("* ]]; then
+        print -u2 -- "Error: CZM2 is not mounted at $source_dir"
+        return 1
+    fi
+
+    # Prefer Homebrew rsync over Apple's older bundled version.
+    if [[ -x /opt/homebrew/bin/rsync ]]; then
+        rsync_bin=/opt/homebrew/bin/rsync
+    elif [[ -x /usr/local/bin/rsync ]]; then
+        rsync_bin=/usr/local/bin/rsync
+    fi
+
+    "$rsync_bin" -ah --no-owner --no-group --itemize-changes \
+        --partial-dir=.rsync-partial --progress \
+        --exclude='/.DocumentRevisions-V100*/' \
+        --exclude='/.Spotlight-V100/' \
+        --exclude='/.TemporaryItems/' \
+        --exclude='/.Trashes/' \
+        --exclude='/.fseventsd/' \
+        --exclude='.DS_Store' \
+        "$@" -- "$source_dir/" "jon@bagheera:/srv/pewter/"
+}
+
 #Alias
 alias bagheera="ssh jon@bagheera"
 
