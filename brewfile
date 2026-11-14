@@ -1,21 +1,9 @@
 # CLI tools
 brew "neovim"
 brew "stow"
-brew "fzf"
 brew "zig"
 brew "go"
 brew "node"
 brew "php"
 brew "composer"
 
-# GUI Applications
-cask "zen"
-cask "helium-browser"
-cask "qobuz"
-cask "ghostty"
-cask "obsidian"
-cask "iina"
-cask "obs"
-cask "affinity"
-cask "blender"
-cask "nikitabobko/tap/aerospace"

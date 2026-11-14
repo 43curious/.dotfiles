@@ -1,6 +1,5 @@
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:/usr/local/bin:$PATH
-export PATH="$HOME/.emacs.d/bin:$PATH"
 export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
 # Path to your oh-my-zsh installation.
@@ -40,19 +39,6 @@ plugins=(
   zsh-autosuggestions
 )
 source $ZSH/oh-my-zsh.sh
-
-# Script for searching local Development directory for projects
-ff() {
-  local dir
-  dir=$(find $HOME/Dev -type d -maxdepth 1 ! -name '.*' | fzf --style minimal)
-  if [ -n "$dir" ]; then
-    cd "$dir" || return
-    nvim . || return
-    clear  # Clear the terminal screen
-  fi
-}
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-bindkey -s '^F' 'ff\n'
 
 # Brewsync
 function brewsync() {
@@ -95,7 +81,6 @@ function brewsync() {
 
 #Alias
 alias bagheera="ssh jon@bagheera"
-alias sd="ssh -t jon@bagheera 'sudo shutdown -h now'"
 
 # Local tools
 [[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
