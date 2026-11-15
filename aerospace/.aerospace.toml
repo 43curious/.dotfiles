@@ -34,8 +34,8 @@ ctrl-shift-9 = "move-node-to-workspace 9"
 # WINDOW FOCUS — alt + shift
 
 # Focus
-ctrl-j= "focus down"
-ctrl-k= "focus up"
+ctrl-j= "focus left"
+ctrl-k= "focus right"
 
 # Layout
 ctrl-q = "layout tiles"

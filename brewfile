@@ -6,4 +6,5 @@ brew "go"
 brew "node"
 brew "php"
 brew "composer"
-
+brew "rsync"
+brew "ffmpeg"
