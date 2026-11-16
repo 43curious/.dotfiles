@@ -101,3 +101,6 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 # Added by Antigravity CLI installer
 export PATH="/Users/jcastro/.local/bin:$PATH"
+
+# Bitwarden Agents
+export SSH_AUTH_SOCK=/Users/jcastro/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock
