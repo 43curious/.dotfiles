@@ -112,6 +112,45 @@ See the [rsync manual](https://rsync.samba.org/ftp/rsync/rsync.1.html),
 [Apple's launchd guide](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html),
 and [systemd timer documentation](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html).
 
+## Set up Hirayama
+
+[`scripts/setup-hirayama.sh`](scripts/setup-hirayama.sh) configures the Debian 13
+host Hirayama. A copy is placed at `/home/platoa/setup-hirayama.sh` on that host.
+Run it there:
+
+```sh
+sudo bash ~/setup-hirayama.sh
+sudo reboot
+```
+
+After reboot, log in as `jon` with the same password, then run
+`sudo bash ~/setup-hirayama.sh` again to choose the SMB password. Connect from
+Finder with **Go → Connect to Server** and `smb://hirayama/iMac%20Plato`, using
+`jon` and that SMB password. Over Tailscale, use
+`smb://hirayama-1.mau-skate.ts.net/iMac%20Plato`.
+
+The script installs zsh and copies Bagheera's two-line prompt with orange
+(ANSI color 208) in place of purple. It keeps UID/GID 1000, the login password,
+and `/home/platoa`, preserving existing application paths. The account and
+primary group become `jon` at boot before login sessions start, and the rename
+service then disables itself.
+
+The existing ext4 drive labeled `iMac Plato` is mounted at `/srv/imac-plato`
+by UUID through `/etc/fstab`. The script leaves its current desktop mount in
+place until reboot and does not format the disk or recursively change its
+permissions. Samba allows authenticated read/write access for `jon` and checks
+that the correct disk is mounted before opening the share. UFW permits TCP 445
+from the current Wi-Fi LAN (`192.168.29.0/24` on `wlp3s0`) and on `tailscale0`.
+Update that LAN rule if the host changes networks.
+
+Backups of account files, fstab, and any existing zsh configuration are kept
+under `/var/backups/hirayama-setup.*`. The script refuses to replace an existing
+Samba configuration that it did not create. If the rename fails, log in as
+`platoa` and inspect `journalctl -b -u hirayama-rename`.
+
+The boot rename follows the [Debian usermod requirements](https://manpages.debian.org/trixie/passwd/usermod.8.en.html).
+SMB credentials use [Samba's smbpasswd](https://www.samba.org/samba/docs/current/man-html/smbpasswd.8.html).
+
 ## Rex
 
 The `rex` Stow package tracks [init.lua](rex/.config/rex/init.lua). Install it with:
