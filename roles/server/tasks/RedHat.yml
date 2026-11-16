@@ -1,0 +1,43 @@
+---
+- name: Install Fedora's server packages
+  ansible.builtin.dnf:
+    name:
+      - samba
+      - samba-vfs-modules
+      - openssh-server
+      - firewalld
+      - ripgrep
+      - policycoreutils-python-utils
+      - python3-libselinux
+      - avahi
+      - dconf
+      - python3-psutil
+      - python3-gobject
+    state: present
+  become: true
+
+- name: Add the Tailscale Fedora repository
+  ansible.builtin.get_url:
+    url: https://pkgs.tailscale.com/stable/fedora/tailscale.repo
+    dest: /etc/yum.repos.d/tailscale.repo
+    mode: '0644'
+  become: true
+
+- name: Install Tailscale on Fedora
+  ansible.builtin.dnf:
+    name: tailscale
+    state: present
+  become: true
+
+- name: Select the Fedora Samba service
+  ansible.builtin.set_fact:
+    server_smb_service: smb
+
+- name: Label the shared data for Samba without disabling SELinux
+  community.general.sefcontext:
+    target: "{{ item.path }}(/.*)?"
+    setype: samba_share_t
+    state: present
+  loop: "{{ dotfiles_mounts }}"
+  become: true
+  notify: Restore Samba SELinux labels

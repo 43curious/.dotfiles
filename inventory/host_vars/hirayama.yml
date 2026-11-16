@@ -1,0 +1,19 @@
+dotfiles_distribution: Debian
+dotfiles_user: jon
+# Preserve the existing home path; the account itself is jon.
+dotfiles_home: /home/platoa
+dotfiles_group: jon
+dotfiles_prompt_color: 208
+dotfiles_lan_interface: wlp3s0
+dotfiles_lan_subnet: 192.168.29.0/24
+dotfiles_mounts:
+  - name: imac-plato
+    uuid: 7d3c1de4-00ab-4120-9b9a-7feccf2fbac6
+    path: /srv/imac-plato
+    fstype: ext4
+    passno: '2'
+dotfiles_shares:
+  - name: iMac Plato
+    path: /srv/imac-plato
+    mount: /srv/imac-plato
+    uuid: 7d3c1de4-00ab-4120-9b9a-7feccf2fbac6

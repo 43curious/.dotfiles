@@ -1,0 +1,182 @@
+[
+  {
+    "name": "AeroSpace.app",
+    "bundle_id": "bobko.aerospace",
+    "version": "0.20.3-Beta"
+  },
+  {
+    "name": "Affinity.app",
+    "bundle_id": "com.canva.affinity",
+    "version": "3.3.3"
+  },
+  {
+    "name": "Antigravity.app",
+    "bundle_id": "com.google.antigravity",
+    "version": "2.28.2"
+  },
+  {
+    "name": "Bitwarden.app",
+    "bundle_id": "com.bitwarden.desktop",
+    "version": "2026.10.4"
+  },
+  {
+    "name": "Blackmagic Proxy Generator.app",
+    "bundle_id": "com.blackmagic-design.BlackmagicProxyGeneratorStudio",
+    "version": "21.1.1"
+  },
+  {
+    "name": "Blender.app",
+    "bundle_id": "org.blenderfoundation.blender",
+    "version": "5.1.1"
+  },
+  {
+    "name": "Epic Games Launcher.app",
+    "bundle_id": "com.epicgames.EpicGamesLauncher",
+    "version": "20.1.0"
+  },
+  {
+    "name": "Ghostty.app",
+    "bundle_id": "com.mitchellh.ghostty",
+    "version": "1.4.0"
+  },
+  {
+    "name": "Helium.app",
+    "bundle_id": "net.imput.helium",
+    "version": "0.12.3.1"
+  },
+  {
+    "name": "IINA.app",
+    "bundle_id": "com.colliderli.iina",
+    "version": "1.4.2"
+  },
+  {
+    "name": "Infuse.app",
+    "bundle_id": "com.firecore.infuse",
+    "version": "8.5.10"
+  },
+  {
+    "name": "Keynote Creator Studio.app",
+    "bundle_id": "com.apple.Keynote",
+    "version": "15.4"
+  },
+  {
+    "name": "Keynote.app",
+    "bundle_id": "com.apple.iWork.Keynote",
+    "version": "14.5"
+  },
+  {
+    "name": "Logic Pro Creator Studio.app",
+    "bundle_id": "com.apple.mobilelogic",
+    "version": "13.0"
+  },
+  {
+    "name": "Microsoft Excel.app",
+    "bundle_id": "com.microsoft.Excel",
+    "version": "16.115"
+  },
+  {
+    "name": "NDI Access Manager.app",
+    "bundle_id": "com.newtek.Application-Mac-NDI-AccessManager",
+    "version": "6.3.2"
+  },
+  {
+    "name": "NDI Discovery.app",
+    "bundle_id": "com.newtek.ndidiscovery",
+    "version": "6.3.2"
+  },
+  {
+    "name": "NDI Launcher.app",
+    "bundle_id": "com.newtek.NDI-Tools",
+    "version": "6.3.2"
+  },
+  {
+    "name": "NDI Router.app",
+    "bundle_id": "com.newtek.NDIRouter",
+    "version": "6.3.2"
+  },
+  {
+    "name": "NDI Scan Converter.app",
+    "bundle_id": "com.newtek.Application-Mac-NDI-ScanConverter",
+    "version": "6.3.2"
+  },
+  {
+    "name": "NDI Test Patterns.app",
+    "bundle_id": "com.newtek.Test-Patterns-Mac-",
+    "version": "6.3.2"
+  },
+  {
+    "name": "NDI Video Monitor.app",
+    "bundle_id": "com.newtek.Application-Mac-NDI-StudioMonitor",
+    "version": "6.3.2"
+  },
+  {
+    "name": "NDI Virtual Input.app",
+    "bundle_id": "com.newtek.Application-Mac-NDI-VirtualInput",
+    "version": "6.3.2"
+  },
+  {
+    "name": "OBS.app",
+    "bundle_id": "com.obsproject.obs-studio",
+    "version": "32.1.2"
+  },
+  {
+    "name": "Obsidian.app",
+    "bundle_id": "md.obsidian",
+    "version": "1.15.0"
+  },
+  {
+    "name": "Ollama.app",
+    "bundle_id": "com.electron.ollama",
+    "version": "0.24.0"
+  },
+  {
+    "name": "Pages Creator Studio.app",
+    "bundle_id": "com.apple.Pages",
+    "version": "15.4"
+  },
+  {
+    "name": "Pages.app",
+    "bundle_id": "com.apple.iWork.Pages",
+    "version": "14.5"
+  },
+  {
+    "name": "Qobuz.app",
+    "bundle_id": "com.qobuz.desktop",
+    "version": "8.3.0-b028"
+  },
+  {
+    "name": "Rex Beta.app",
+    "bundle_id": "com.superlogical.rex",
+    "version": "0.1.0"
+  },
+  {
+    "name": "Safari.app",
+    "bundle_id": "com.apple.Safari",
+    "version": "27.2"
+  },
+  {
+    "name": "Tailscale.app",
+    "bundle_id": "io.tailscale.ipn.macos",
+    "version": "1.104.6"
+  },
+  {
+    "name": "Upscayl.app",
+    "bundle_id": "org.upscayl.Upscayl",
+    "version": "2.15.0"
+  },
+  {
+    "name": "Xcode.app",
+    "bundle_id": "com.apple.dt.Xcode",
+    "version": "26.6"
+  },
+  {
+    "name": "Zen.app",
+    "bundle_id": "app.zen-browser.zen",
+    "version": "1.23.3b"
+  },
+  {
+    "name": "Zotero.app",
+    "bundle_id": "org.zotero.zotero",
+    "version": "10.0.9"
+  }
+]

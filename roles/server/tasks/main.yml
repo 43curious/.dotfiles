@@ -1,0 +1,90 @@
+---
+- name: Configure the native packages and repositories
+  ansible.builtin.include_tasks: "{{ ansible_facts.os_family }}.yml"
+
+- name: Restore a Neovim version compatible with the captured LazyVim setup
+  ansible.builtin.include_tasks: neovim.yml
+
+- name: Set the server time zone
+  community.general.timezone:
+    name: "{{ dotfiles_timezone }}"
+  become: true
+
+- name: Restore the data disk mounts
+  ansible.builtin.include_tasks: storage.yml
+
+- name: Configure Samba
+  ansible.builtin.template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+    validate: /usr/bin/testparm -s %s
+  become: true
+  notify: Reload Samba
+
+- name: Create Samba's systemd override directory
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ server_smb_service }}.service.d"
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Require the actual disks before starting Samba
+  ansible.builtin.template:
+    src: samba-mounts.conf.j2
+    dest: "/etc/systemd/system/{{ server_smb_service }}.service.d/dotfiles.conf"
+    mode: '0644'
+    backup: true
+  become: true
+  notify: Reload systemd
+
+- name: Find existing Samba accounts
+  ansible.builtin.command: /usr/bin/pdbedit --list
+  register: server_smb_accounts
+  changed_when: false
+  check_mode: false
+  become: true
+  when: not ansible_check_mode
+  no_log: true
+
+- name: Restore the Samba credential from the password manager when missing
+  ansible.builtin.command:
+    argv: [/usr/bin/smbpasswd, -a, -s, "{{ dotfiles_user }}"]
+    stdin: "{{ dotfiles_smb_password }}\n{{ dotfiles_smb_password }}\n"
+  become: true
+  when:
+    - not ansible_check_mode
+    - dotfiles_smb_password | length > 0
+    - server_smb_accounts.stdout_lines | select('match', '^' + dotfiles_user + ':') | list | length == 0
+  changed_when: true
+  no_log: true
+
+- name: Explain how to finish SMB authentication without supplying a secret
+  ansible.builtin.debug:
+    msg: "If jon has no SMB credential yet, run sudo smbpasswd -a jon. Keep it in your password manager."
+  when: dotfiles_smb_password | length == 0
+
+- name: Apply the firewall declarations
+  ansible.builtin.include_tasks: firewall.yml
+
+- name: Install and enable Rex
+  ansible.builtin.include_tasks: rex.yml
+
+- name: Enable SSH, Tailscale and Samba
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop:
+    - "{{ 'sshd' if ansible_facts.os_family == 'RedHat' else 'ssh' }}"
+    - tailscaled
+    - "{{ server_smb_service }}"
+  become: true
+
+- name: Remind a new installation to authorize Tailscale
+  ansible.builtin.debug:
+    msg: Run sudo tailscale up on a fresh installation, then re-pair Rex. Credentials stay outside the repo.

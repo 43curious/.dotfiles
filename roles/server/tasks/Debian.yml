@@ -1,0 +1,47 @@
+---
+- name: Install Debian's server packages
+  ansible.builtin.apt:
+    name:
+      - samba
+      - samba-vfs-modules
+      - openssh-server
+      - ufw
+      - ripgrep
+      - python3-apt
+      - avahi-daemon
+      - dconf-cli
+      - python3-psutil
+      - python3-gi
+      - dbus-user-session
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Trust the Tailscale Debian repository
+  ansible.builtin.get_url:
+    url: "https://pkgs.tailscale.com/stable/debian/{{ ansible_facts.distribution_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: '0644'
+  become: true
+
+- name: Add the Tailscale Debian repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg]
+      https://pkgs.tailscale.com/stable/debian {{ ansible_facts.distribution_release }} main
+    filename: tailscale
+    state: present
+  become: true
+
+- name: Install Tailscale on Debian
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Select the Debian Samba service
+  ansible.builtin.set_fact:
+    server_smb_service: smbd

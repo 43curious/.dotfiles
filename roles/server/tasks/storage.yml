@@ -1,0 +1,45 @@
+---
+- name: Check that the declared data disks exist
+  ansible.builtin.stat:
+    path: "/dev/disk/by-uuid/{{ item.uuid }}"
+    follow: true
+  loop: "{{ dotfiles_mounts }}"
+  register: server_disks
+
+- name: Refuse to replace a missing disk with an empty directory
+  ansible.builtin.assert:
+    that: item.stat.exists
+    fail_msg: "Missing {{ item.item.name }} (UUID {{ item.item.uuid }}). Connect or restore the disk first; no disk is formatted by this repo."
+  loop: "{{ server_disks.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Inspect existing mount targets before touching fstab
+  ansible.builtin.command:
+    argv: [findmnt, -rn, -M, "{{ item.path }}", -o, UUID]
+  loop: "{{ dotfiles_mounts }}"
+  register: server_existing_mounts
+  failed_when: server_existing_mounts.rc not in [0, 1]
+  changed_when: false
+  check_mode: false
+
+- name: Refuse to mount over a different filesystem
+  ansible.builtin.assert:
+    that: item.stdout | trim in ['', item.item.uuid]
+    fail_msg: "{{ item.item.path }} is already a different filesystem."
+  loop: "{{ server_existing_mounts.results }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+
+- name: Mount existing data disks by UUID and preserve the rest of fstab
+  ansible.posix.mount:
+    path: "{{ item.path }}"
+    src: "UUID={{ item.uuid }}"
+    fstype: "{{ item.fstype }}"
+    opts: defaults,nofail,nosuid,nodev,x-systemd.device-timeout=10s
+    dump: '0'
+    passno: "{{ item.passno }}"
+    state: mounted
+    backup: true
+  loop: "{{ dotfiles_mounts }}"
+  become: true

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Install the control tools into this checkout, without changing the machines.
+set -euo pipefail
+repo_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+cd "$repo_dir"
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+if ! command -v uv >/dev/null; then
+    installer=$(mktemp)
+    trap 'rm -f "$installer"' EXIT
+    curl --fail --location --silent --show-error https://astral.sh/uv/0.13.8/install.sh -o "$installer"
+    sh "$installer"
+fi
+if [[ ! -x .venv/bin/python ]]; then
+    uv venv --python 3.13 .venv
+fi
+uv pip sync --require-hashes --python .venv/bin/python requirements.txt
+.venv/bin/ansible-galaxy collection install -r requirements.yml -p .ansible/collections
+printf '\nReady. Start with: ./dotfiles plan kleya --local\n'

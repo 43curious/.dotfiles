@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# A small interface over Ansible; extra arguments pass through unchanged.
+set -euo pipefail
+repo_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+cd "$repo_dir"
+export ANSIBLE_CONFIG="$repo_dir/ansible.cfg"
+export PATH="$repo_dir/.venv/bin:$HOME/.local/bin:/opt/homebrew/bin:$PATH"
+export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=yes -o UserKnownHostsFile=\"$repo_dir/keys/known_hosts\" -o ControlMaster=auto -o ControlPersist=60s"
+
+usage() {
+    cat <<'HELP'
+./bootstrap                            Install pinned control tools
+./dotfiles plan PROFILE [--local]       Preview changes, including diffs
+./dotfiles apply PROFILE [--local]      Apply a profile; ask for sudo password
+./dotfiles apply PROFILE --batch        Non-interactive (GitHub Actions)
+./dotfiles check PROFILE [--local]      Check mounts, services, user and shell
+./dotfiles capture PROFILE [--local]    Save an ignored inventory for review
+./dotfiles inventory                    Show the three profiles
+
+Profiles: kleya, bagheera, hirayama, servers, all.
+--local requires a single profile. Other arguments go to ansible-playbook,
+for example --tags user or --skip-tags workloads. Nothing pushes to GitHub.
+HELP
+}
+
+action=${1:-help}
+[[ $# == 0 ]] || shift
+case "$action" in
+    help|--help|-h) usage; exit 0 ;;
+    inventory)
+        [[ -x .venv/bin/ansible-inventory ]] || { echo 'Run ./bootstrap first.' >&2; exit 1; }
+        exec ansible-inventory --graph
+        ;;
+    plan|apply|check|capture) ;;
+    *) usage >&2; exit 2 ;;
+esac
+profile=${1:-}
+case "$profile" in kleya|bagheera|hirayama|servers|all) ;; *) usage >&2; exit 2 ;; esac
+shift
+[[ -x .venv/bin/ansible-playbook ]] || { echo 'Run ./bootstrap first.' >&2; exit 1; }
+local_mode=false
+batch=false
+args=(--limit "$profile")
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --local) local_mode=true ;;
+        --batch) batch=true ;;
+        # Keep host selection and check mode controlled by this interface.
+        --limit|--limit=*|-l|-l?*|--connection|--connection=*|-c|-c?*|--check|-C)
+            echo "Use a profile, --local, or plan instead of $1." >&2; exit 2 ;;
+        *) args+=("$1") ;;
+    esac
+    shift
+done
+if $local_mode; then
+    case "$profile" in all|servers) echo '--local needs a single machine profile.' >&2; exit 2 ;; esac
+    args+=(--connection local)
+fi
+if [[ $action == apply || $action == plan ]] && ! $batch && [[ -t 0 && -z ${DOTFILES_BECOME_PASSWORD:-} ]]; then
+    # Share this one credential between Ansible's sudo and Homebrew's PKG installers.
+    printf 'Contraseña de sudo: ' >&2
+    IFS= read -r -s DOTFILES_BECOME_PASSWORD
+    printf '\n' >&2
+    export DOTFILES_BECOME_PASSWORD
+fi
+if [[ -n ${DOTFILES_BECOME_PASSWORD:-} ]]; then
+    # The argument contains a lookup expression; the actual password stays in the environment.
+    args+=(-e '{"ansible_become_password":"{{ lookup(\"ansible.builtin.env\", \"DOTFILES_BECOME_PASSWORD\") }}"}')
+fi
+case "$action" in
+    check) playbook=playbooks/check.yml ;;
+    capture) playbook=playbooks/capture.yml ;;
+    *) playbook=playbooks/site.yml ;;
+esac
+if [[ $action == plan ]]; then
+    args+=(--check --diff)
+fi
+if $batch; then
+    export ANSIBLE_SSH_ARGS="$ANSIBLE_SSH_ARGS -o BatchMode=yes"
+fi
+exec ansible-playbook "$playbook" "${args[@]}"

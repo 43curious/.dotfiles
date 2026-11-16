@@ -1,2 +1,13 @@
 .DS_Store
+.venv/
+.ansible/
+.local/
+secrets/
+backups/
+__pycache__/
+*.retry
+*.age
+*.vault-password
+.*.swp
+*~
 

@@ -1,0 +1,10 @@
+[
+  {
+    "key": "/org/gnome/desktop/interface/toolkit-accessibility",
+    "value": "false"
+  },
+  {
+    "key": "/org/gnome/desktop/input-sources/sources",
+    "value": "[('xkb', 'es')]"
+  }
+]

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Generate a separate deployment identity; never print or commit its private key.
+set -euo pipefail
+repo_dir=$(cd -- "$(dirname -- "$0")/.." && pwd)
+key_path="$repo_dir/.local/github-actions_ed25519"
+[[ ! -e $key_path && ! -e $repo_dir/keys/github-actions.pub ]] || {
+    echo 'A deployment key already exists. Keep it or rotate it deliberately.' >&2
+    exit 1
+}
+umask 077
+mkdir -p "$repo_dir/.local" "$repo_dir/keys"
+ssh-keygen -t ed25519 -N '' -C dotfiles-github-actions -f "$key_path"
+cp "$key_path.pub" "$repo_dir/keys/github-actions.pub"
+chmod 0644 "$repo_dir/keys/github-actions.pub"
+printf '\nPrivate key: %s\n' "$key_path"
+printf 'Save it in your password manager and the GitHub secret DOTFILES_SSH_KEY.\n'
+printf 'Commit only keys/github-actions.pub, then apply each profile from your Mac.\n'

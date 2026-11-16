@@ -1,0 +1,139 @@
+---
+- name: Install Linux prerequisites
+  ansible.builtin.package:
+    name: [git, zsh, rsync, curl, ca-certificates, python3, unzip, tar, gzip, make, gcc]
+    state: present
+  become: true
+  when: ansible_facts.system == 'Linux'
+
+- name: Read the existing server identity
+  ansible.builtin.command:
+    argv: [getent, passwd, "{{ dotfiles_user }}"]
+  register: base_existing_user
+  changed_when: false
+  failed_when: base_existing_user.rc not in [0, 2]
+  check_mode: false
+  when: ansible_facts.system == 'Linux'
+
+- name: Require a matching UID, GID and home before changing a server account
+  ansible.builtin.assert:
+    that:
+      - base_existing_user.rc == 2 or base_existing_user.stdout.split(':')[2] | int == 1000
+      - base_existing_user.rc == 2 or base_existing_user.stdout.split(':')[3] | int == 1000
+      - base_existing_user.rc == 2 or base_existing_user.stdout.split(':')[5] == dotfiles_home
+    fail_msg: The existing account differs from this profile. Review its UID/GID/home instead of renaming or moving an active account.
+  when: ansible_facts.system == 'Linux'
+
+- name: Create Jon's primary group
+  ansible.builtin.group:
+    name: "{{ dotfiles_group }}"
+    gid: 1000
+  become: true
+  when: ansible_facts.system == 'Linux'
+
+- name: Preserve Jon's identity and home directory
+  ansible.builtin.user:
+    name: "{{ dotfiles_user }}"
+    uid: 1000
+    group: "{{ dotfiles_group }}"
+    home: "{{ dotfiles_home }}"
+    move_home: false
+    shell: /usr/bin/zsh
+    groups: "{{ 'wheel' if ansible_facts.os_family == 'RedHat' else 'sudo' }}"
+    append: true
+    create_home: true
+  become: true
+  when: ansible_facts.system == 'Linux'
+
+- name: Restore the Mac's SSH public key on the servers
+  ansible.posix.authorized_key:
+    user: "{{ dotfiles_user }}"
+    key: "{{ lookup('ansible.builtin.file', item) }}"
+    exclusive: false
+  loop: "{{ query('ansible.builtin.fileglob', dotfiles_root + '/keys/*.pub') }}"
+  become: true
+  when: ansible_facts.system == 'Linux'
+
+- name: Restore the allowed SSH public keys for the Mac account
+  ansible.posix.authorized_key:
+    user: "{{ dotfiles_user }}"
+    key: "{{ lookup('ansible.builtin.file', item) }}"
+    exclusive: false
+  loop: "{{ query('ansible.builtin.fileglob', dotfiles_root + '/keys/*.pub') }}"
+  when: ansible_facts.system == 'Darwin'
+
+- name: Find Homebrew
+  ansible.builtin.stat:
+    path: /opt/homebrew/bin/brew
+  register: base_brew
+  when: ansible_facts.system == 'Darwin'
+
+- name: Require Homebrew on the work Mac
+  ansible.builtin.assert:
+    that: base_brew.stat.exists
+    fail_msg: Install Homebrew first; see docs/recovery.md.
+  when: ansible_facts.system == 'Darwin'
+
+- name: Copy the package declaration to the Mac
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/brewfile"
+    dest: "{{ dotfiles_home }}/.Brewfile"
+    mode: '0644'
+    backup: true
+  when: ansible_facts.system == 'Darwin'
+
+- name: Check declared Homebrew packages
+  ansible.builtin.command:
+    argv: [/opt/homebrew/bin/brew, bundle, check, --file=-]
+    stdin: "{{ lookup('ansible.builtin.file', dotfiles_root + '/brewfile') }}"
+  register: base_brew_check
+  changed_when: base_brew_check.rc != 0
+  failed_when: base_brew_check.rc not in [0, 1]
+  check_mode: false
+  when: ansible_facts.system == 'Darwin'
+
+- name: Read the taps declared in the Brewfile
+  ansible.builtin.command:
+    argv: [/opt/homebrew/bin/brew, bundle, list, --tap, --file=-]
+    stdin: "{{ lookup('ansible.builtin.file', dotfiles_root + '/brewfile') }}"
+  register: base_brew_taps
+  changed_when: false
+  check_mode: false
+  when: ansible_facts.system == 'Darwin'
+
+- name: Install declared Homebrew taps
+  community.general.homebrew_tap:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ base_brew_taps.stdout_lines | default([]) }}"
+  when: ansible_facts.system == 'Darwin'
+
+- name: Read the missing applications declared in the Brewfile
+  ansible.builtin.command:
+    argv: [/opt/homebrew/bin/brew, bundle, list, --cask, --file=-]
+    stdin: "{{ lookup('ansible.builtin.file', dotfiles_root + '/brewfile') }}"
+  register: base_brew_casks
+  changed_when: false
+  check_mode: false
+  when: ansible_facts.system == 'Darwin'
+
+- name: Install missing casks with support for privileged package installers
+  community.general.homebrew_cask:
+    name: "{{ base_brew_casks.stdout_lines }}"
+    state: present
+    sudo_password: "{{ lookup('ansible.builtin.env', 'DOTFILES_BECOME_PASSWORD') | default(omit, true) }}"
+  when:
+    - ansible_facts.system == 'Darwin'
+    - not ansible_check_mode
+    - base_brew_casks.stdout_lines | default([]) | length > 0
+
+- name: Install declared Homebrew packages without pruning or upgrading
+  ansible.builtin.command:
+    argv: [/opt/homebrew/bin/brew, bundle, install, --no-upgrade, --file, "{{ dotfiles_home }}/.Brewfile"]
+  environment:
+    HOMEBREW_NO_AUTO_UPDATE: '1'
+  when:
+    - ansible_facts.system == 'Darwin'
+    - not ansible_check_mode
+    - base_brew_check.rc | default(1) != 0
+  changed_when: true

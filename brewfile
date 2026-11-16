@@ -1,4 +1,10 @@
 # CLI tools
+brew "git"
+brew "uv"
+brew "gh"
+brew "ripgrep"
+brew "fd"
+brew "switchaudio-osx"
 brew "neovim"
 brew "stow"
 brew "zig"
@@ -8,3 +14,23 @@ brew "php"
 brew "composer"
 brew "rsync"
 brew "ffmpeg"
+
+# Restore applications missing from /Applications. Existing installations,
+# including those installed by IT, remain under their current ownership.
+# This Brewfile is additive: do not use it with brew bundle cleanup.
+tap "nikitabobko/tap"
+cask "nikitabobko/tap/aerospace" unless File.exist?("/Applications/AeroSpace.app")
+cask "ghostty" unless File.exist?("/Applications/Ghostty.app")
+cask "tailscale-app" unless File.exist?("/Applications/Tailscale.app")
+cask "zen" unless File.exist?("/Applications/Zen.app")
+cask "helium-browser" unless File.exist?("/Applications/Helium.app")
+cask "iina" unless File.exist?("/Applications/IINA.app")
+cask "blender" unless File.exist?("/Applications/Blender.app")
+cask "zotero" unless File.exist?("/Applications/Zotero.app")
+cask "qobuz" unless File.exist?("/Applications/Qobuz.app")
+cask "affinity" unless File.exist?("/Applications/Affinity.app")
+cask "antigravity" unless File.exist?("/Applications/Antigravity.app")
+cask "upscayl" unless File.exist?("/Applications/Upscayl.app")
+cask "ollama-app" unless File.exist?("/Applications/Ollama.app")
+cask "adobe-creative-cloud" unless File.exist?("/Applications/Adobe Creative Cloud")
+cask "microsoft-excel" unless File.exist?("/Applications/Microsoft Excel.app")

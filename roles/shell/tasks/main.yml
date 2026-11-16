@@ -1,0 +1,82 @@
+---
+- name: Create user configuration directories
+  ansible.builtin.file:
+    path: "{{ dotfiles_home }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: [.config, .config/dotfiles, .config/rex]
+
+- name: Install the host's shell settings
+  ansible.builtin.template:
+    src: host.zsh.j2
+    dest: "{{ dotfiles_home }}/.config/dotfiles/host.zsh"
+    mode: '0644'
+    backup: true
+
+- name: Preserve a pre-existing zshrc before replacing its link or contents
+  ansible.builtin.stat:
+    path: "{{ dotfiles_home }}/.zshrc"
+    follow: false
+  register: shell_zshrc
+
+- name: Keep the original zshrc
+  ansible.builtin.copy:
+    src: "{{ dotfiles_home }}/.zshrc"
+    dest: "{{ dotfiles_home }}/.zshrc.before-dotfiles"
+    remote_src: true
+    force: false
+    mode: '0600'
+  when: shell_zshrc.stat.exists | default(false)
+
+- name: Remove the old Stow zshrc link before managing a regular file
+  ansible.builtin.file:
+    path: "{{ dotfiles_home }}/.zshrc"
+    state: absent
+  when: shell_zshrc.stat.islnk | default(false)
+
+- name: Install the shared zsh configuration
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/shell/zshrc"
+    dest: "{{ dotfiles_home }}/.zshrc"
+    mode: '0644'
+    backup: true
+
+- name: Install the shared Git configuration
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/git/.gitconfig"
+    dest: "{{ dotfiles_home }}/.gitconfig"
+    mode: '0644'
+    backup: true
+
+- name: Install the Rex key bindings
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/rex/.config/rex/init.lua"
+    dest: "{{ dotfiles_home }}/.config/rex/init.lua"
+    mode: '0644'
+    backup: true
+
+- name: Install Neovim's configuration
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/nvim/.config/nvim/"
+    dest: "{{ dotfiles_home }}/.config/nvim/"
+    mode: preserve
+    directory_mode: '0755'
+    backup: true
+
+- name: Restore Oh My Zsh and its plugins at the captured revisions
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ dotfiles_home }}/{{ item.path }}"
+    version: "{{ item.revision }}"
+    update: true
+  loop:
+    - repo: https://github.com/ohmyzsh/ohmyzsh.git
+      path: .oh-my-zsh
+      revision: "{{ dotfiles_omz_revision }}"
+    - repo: https://github.com/zsh-users/zsh-autosuggestions.git
+      path: .oh-my-zsh/custom/plugins/zsh-autosuggestions
+      revision: "{{ dotfiles_autosuggestions_revision }}"
+    - repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+      path: .oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+      revision: "{{ dotfiles_highlighting_revision }}"
+  when: ansible_facts.system == 'Darwin'

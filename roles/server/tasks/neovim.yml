@@ -1,0 +1,45 @@
+---
+- name: Select the verified upstream Neovim archive
+  ansible.builtin.set_fact:
+    server_neovim_archive: "{{ dotfiles_neovim_archives[ansible_facts.architecture] }}"
+    server_neovim_path: "/opt/neovim/{{ dotfiles_neovim_version }}"
+
+- name: Check the captured Neovim installation
+  ansible.builtin.stat:
+    path: "{{ server_neovim_path }}/{{ server_neovim_archive.directory }}/bin/nvim"
+  register: server_neovim_binary
+
+- name: Create the versioned Neovim installation directory
+  ansible.builtin.file:
+    path: "{{ server_neovim_path }}"
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Download the upstream archive with its published SHA-256
+  ansible.builtin.get_url:
+    url: "{{ server_neovim_archive.url }}"
+    checksum: "{{ server_neovim_archive.checksum }}"
+    dest: "/var/tmp/dotfiles-neovim-{{ dotfiles_neovim_version }}.tar.gz"
+    mode: '0644'
+  become: true
+  when: not server_neovim_binary.stat.exists
+
+- name: Extract the verified Neovim release
+  ansible.builtin.unarchive:
+    src: "/var/tmp/dotfiles-neovim-{{ dotfiles_neovim_version }}.tar.gz"
+    dest: "{{ server_neovim_path }}"
+    remote_src: true
+    creates: "{{ server_neovim_path }}/{{ server_neovim_archive.directory }}/bin/nvim"
+  become: true
+  when:
+    - not server_neovim_binary.stat.exists
+    - not ansible_check_mode
+
+- name: Select this Neovim version without overwriting a custom binary
+  ansible.builtin.file:
+    src: "{{ server_neovim_path }}/{{ server_neovim_archive.directory }}/bin/nvim"
+    dest: /usr/local/bin/nvim
+    state: link
+  become: true
+  when: server_neovim_binary.stat.exists or not ansible_check_mode

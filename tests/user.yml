@@ -1,0 +1,13 @@
+---
+- name: Exercise user restoration in a temporary home
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    dotfiles_root: "{{ playbook_dir | dirname }}"
+    dotfiles_home: "{{ sandbox_home }}"
+    dotfiles_prompt_color: 208
+    ansible_facts:
+      system: Linux
+  roles:
+    - shell

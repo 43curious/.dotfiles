@@ -1,0 +1,89 @@
+---
+- name: Require the real Copper disk before touching workload state
+  ansible.builtin.command:
+    argv:
+      - findmnt
+      - -rn
+      - -M
+      - /srv/copper
+      - -S
+      - "UUID={{ dotfiles_mounts | selectattr('name', 'equalto', 'copper') | map(attribute='uuid') | first }}"
+  changed_when: false
+  check_mode: false
+
+- name: Add the official Docker Fedora repository
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/fedora/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: '0644'
+  become: true
+
+- name: Install Docker Engine and Compose
+  ansible.builtin.dnf:
+    name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+    state: present
+  become: true
+
+- name: Preserve Jon's Docker access
+  ansible.builtin.user:
+    name: "{{ dotfiles_user }}"
+    groups: docker
+    append: true
+  become: true
+
+- name: Recreate only the disposable transcode cache after verifying the disk
+  ansible.builtin.file:
+    path: /srv/copper/docker/transcode
+    state: directory
+    owner: "{{ dotfiles_user }}"
+    group: "{{ dotfiles_group }}"
+    mode: '0755'
+  become: true
+
+- name: Locate the existing workload data
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ dotfiles_workload_paths }}"
+  register: workloads_data
+
+- name: Require restored workload data before starting containers
+  ansible.builtin.assert:
+    that: item.stat.isdir | default(false)
+    fail_msg: "Restore {{ item.item }} from your data backup first; the repo does not replace it with empty application state."
+  loop: "{{ workloads_data.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Copy Bagheera's Compose declaration
+  ansible.builtin.copy:
+    src: "{{ dotfiles_root }}/workloads/bagheera/compose.yaml"
+    dest: "{{ dotfiles_home }}/compose.yaml"
+    owner: "{{ dotfiles_user }}"
+    group: "{{ dotfiles_group }}"
+    mode: '0644'
+    backup: true
+  become: true
+  notify: Apply Bagheera containers
+
+- name: Install the workload boot service
+  ansible.builtin.template:
+    src: bagheera-containers.service.j2
+    dest: /etc/systemd/system/dotfiles-containers.service
+    mode: '0644'
+    backup: true
+  become: true
+
+- name: Enable Docker
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+  become: true
+
+- name: Enable the existing containers after their data disks are mounted
+  ansible.builtin.systemd_service:
+    name: dotfiles-containers
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true

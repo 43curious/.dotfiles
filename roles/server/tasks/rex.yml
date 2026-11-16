@@ -1,0 +1,67 @@
+---
+- name: Check for the packaged Rex binary
+  ansible.builtin.stat:
+    path: /usr/bin/rex
+  register: server_rex_binary
+
+- name: Download the official Rex package installer
+  ansible.builtin.get_url:
+    url: "{{ dotfiles_rex_installer_url }}"
+    dest: /var/tmp/dotfiles-rex-install.sh
+    mode: '0700'
+  become: true
+  when: not server_rex_binary.stat.exists
+
+- name: Install the native Rex package only when missing
+  ansible.builtin.command:
+    argv: [sh, /var/tmp/dotfiles-rex-install.sh, --channel, preview]
+    creates: /usr/bin/rex
+  become: true
+  when: not server_rex_binary.stat.exists
+
+- name: Keep Bagheera's shared Rex server enabled
+  ansible.builtin.systemd_service:
+    name: rex
+    enabled: true
+    state: started
+  become: true
+  when: dotfiles_rex_mode == 'shared'
+
+- name: Create the personal-server persistence directory
+  ansible.builtin.file:
+    path: /var/lib/systemd/linger
+    state: directory
+    mode: '0755'
+  become: true
+  when: dotfiles_rex_mode == 'personal'
+
+- name: Keep Hirayama's personal Rex server available after logout
+  ansible.builtin.file:
+    path: "/var/lib/systemd/linger/{{ dotfiles_user }}"
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+    mode: '0644'
+  become: true
+  when: dotfiles_rex_mode == 'personal'
+
+- name: Create the personal socket's enablement directory
+  ansible.builtin.file:
+    path: "{{ dotfiles_home }}/.config/systemd/user/sockets.target.wants"
+    state: directory
+    owner: "{{ dotfiles_user }}"
+    group: "{{ dotfiles_group }}"
+    mode: '0755'
+  become: true
+  when: dotfiles_rex_mode == 'personal'
+
+- name: Enable the packaged personal Rex socket without restarting sessions
+  ansible.builtin.file:
+    src: /usr/lib/systemd/user/rex.socket
+    dest: "{{ dotfiles_home }}/.config/systemd/user/sockets.target.wants/rex.socket"
+    state: link
+    owner: "{{ dotfiles_user }}"
+    group: "{{ dotfiles_group }}"
+    force: true
+  become: true
+  when: dotfiles_rex_mode == 'personal'

@@ -1,0 +1,9 @@
+---
+- name: Restore the captured Linux appearance and input preferences
+  community.general.dconf:
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+  loop: "{{ lookup('ansible.builtin.file', dotfiles_root + '/desktop/' + inventory_hostname + '/settings.json') | from_json }}"
+  loop_control:
+    label: "{{ item.key }}"
