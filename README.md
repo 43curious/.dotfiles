@@ -129,6 +129,17 @@ Finder with **Go → Connect to Server** and `smb://hirayama/iMac%20Plato`, usin
 `jon` and that SMB password. Over Tailscale, use
 `smb://hirayama-1.mau-skate.ts.net/iMac%20Plato`.
 
+New setups hide the filesystem's `lost+found` directory over SMB. To apply
+that setting to an existing setup, run:
+
+```sh
+sudo bash ~/setup-hirayama.sh --hide-lost-found
+```
+
+This backs up and updates the share configuration, preserves existing veto
+patterns, and reloads Samba without changing your password. Disconnect and
+reconnect the share in Finder afterward. The directory stays on the disk.
+
 The script installs zsh and copies Bagheera's two-line prompt with orange
 (ANSI color 208) in place of purple. It keeps UID/GID 1000, the login password,
 and `/home/platoa`, preserving existing application paths. The account and

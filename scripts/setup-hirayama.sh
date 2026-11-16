@@ -10,16 +10,46 @@ if [[ ${1:-} == --help ]]; then
     printf '%s\n' \
         'On hirayama: sudo bash ~/setup-hirayama.sh' \
         'Reboot, log in as jon with the existing password, then run it again.' \
-        'The second run asks for the SMB password. The home stays /home/platoa.'
+        'The second run asks for the SMB password. The home stays /home/platoa.' \
+        'On an existing setup: sudo bash ~/setup-hirayama.sh --hide-lost-found'
     exit 0
 fi
-[[ $# == 0 ]] || die 'Only --help is supported.'
+[[ $# == 0 || ( $# == 1 && $1 == --hide-lost-found ) ]] || die 'Supported options: --help, --hide-lost-found.'
 [[ $EUID == 0 ]] || die 'Run with: sudo bash ~/setup-hirayama.sh'
 [[ $(hostname -s) == hirayama ]] || die 'This script is only for hirayama.'
 # shellcheck source=/dev/null
 source /etc/os-release
 [[ $ID == debian && $VERSION_ID == 13 ]] || die 'Expected Debian 13.'
 umask 077
+
+# Update an existing share without repeating account setup or changing passwords.
+if [[ ${1:-} == --hide-lost-found ]]; then
+    config=/etc/samba/smb.conf
+    grep -Fq '# Managed by setup-hirayama.sh' "$config" || die 'Expected the Samba configuration created by this script.'
+    grep -Fxq '[iMac Plato]' "$config" || die 'Cannot find the iMac Plato share.'
+    veto=$(testparm -s --section-name='iMac Plato' --parameter-name='veto files' "$config")
+    if [[ $veto != *'/lost+found/'* ]]; then
+        candidate=$(mktemp /etc/samba/smb.conf.XXXXXXXX)
+        trap 'rm -f "$candidate"' EXIT
+        # Add the setting at the end of this share, preserving other veto patterns.
+        awk -v veto="${veto%/}/lost+found/" '
+            /^[[:space:]]*\[/ {
+                if (share) print "    veto files = " veto
+                share = ($0 == "[iMac Plato]")
+            }
+            { print }
+            END { if (share) print "    veto files = " veto }
+        ' "$config" > "$candidate"
+        testparm -s "$candidate" >/dev/null
+        backup_file=$(mktemp /var/backups/hirayama-smb.XXXXXXXX)
+        cp -p "$config" "$backup_file"
+        install -m 0644 "$candidate" "$config"
+        printf 'Backup: %s\n' "$backup_file"
+    fi
+    systemctl reload smbd
+    printf 'lost+found is hidden over SMB. Disconnect and reconnect the share in Finder.\n'
+    exit 0
+fi
 
 drive_uuid=7d3c1de4-00ab-4120-9b9a-7feccf2fbac6
 share_path=/srv/imac-plato
@@ -141,6 +171,7 @@ cat > /etc/samba/smb.conf <<'SMBCONF'
     read only = no
     guest ok = no
     valid users = jon
+    veto files = /lost+found/
     create mask = 0600
     directory mask = 0700
     root preexec = /usr/bin/findmnt -rn -M /srv/imac-plato -S UUID=7d3c1de4-00ab-4120-9b9a-7feccf2fbac6
