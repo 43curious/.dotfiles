@@ -1,130 +1,220 @@
-# Dotfiles y equipos
+# dotfiles
 
-La configuración de mis tres equipos, con perfiles declarativos y unos pocos
-comandos para revisar, restaurar y comprobar el resultado. Ansible ejecuta las
-tareas; macOS usa Homebrew, Fedora usa DNF y Debian usa APT.
+My dotfiles are stored in the `~/.dotfiles` folder inside my machine. Then stowed (symlinked) to my home folder.
+This dotfiles [stow guide](https://www.jakewiesler.com/blog/managing-dotfiles) helped me while setting up my system. If you want to learn more about stow, you can read this guide as well as this [other guide](https://www.gnu.org/software/stow/manual/stow.html#Terminology) from GNU project.
 
-| Perfil | Equipo | Usuario y carpeta personal | Prompt | Datos y servicios |
-| --- | --- | --- | --- | --- |
-| `kleya` | MacBook del trabajo, Apple Silicon / macOS | `jcastro`, `/Users/jcastro` | Cian, 14 | Homebrew, AeroSpace, Rex, Ghostty, Neovim |
-| `bagheera` | Fedora Server | `jon`, `/home/jon` | Morado, 177 | Copper, Pewter, Samba, Jellyfin, qBittorrent |
-| `hirayama` | Debian 13 | `jon`, `/home/platoa` | Naranja, 208 | iMac Plato, Samba |
+My dotfiles have the config for the following:
+- Git config
+- My .zsrhc
+- [Oh My Zsh](https://ohmyz.sh/) for shell customization with the following extensions
+	- [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
+	- [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
+- My [Rex](https://www.superlogical.com/rex/) Lua configuration
+- [neovim ](https://neovim.io/) theme and plugins
+- My [SKHD](https://github.com/koekeishiya/skhd) config for navigation
 
-## Empezar
+## Homebrew
 
-En el Mac, desde este checkout:
+[`brewfile`](brewfile) declares the Homebrew packages to keep. Run `brewsync` to:
 
-```sh
-./bootstrap
-./dotfiles plan kleya --local
-./dotfiles apply kleya --local
-./dotfiles check kleya --local
+1. Open the file in Neovim. Save and quit with `:wq` to continue.
+2. Update Homebrew itself and its package definitions with `brew update`.
+3. Install missing packages and upgrade declared packages with `brew bundle install --upgrade`.
+4. Remove Homebrew formulae, casks, and taps absent from the file with `brew bundle cleanup --force`, keeping dependencies required by declared packages.
+
+Use `brew "name"`, `cask "name"`, and `tap "owner/repo"` entries for tools, apps,
+and additional repositories. Cleanup is limited to Homebrew packages and taps;
+other package managers are outside this sync.
+
+Exit Neovim with `:cq` to cancel before changing installed packages. Each step
+stops on failure, so cleanup only runs after installation succeeds. Quitting
+with `:q!` continues using the file already saved on disk.
+
+See the [Homebrew Bundle documentation](https://docs.brew.sh/Brew-Bundle-and-Brewfile).
+
+## Pewter file sync
+
+`pewtersync` copies the contents of `/Volumes/CZM2/` to
+`jon@bagheera:/srv/pewter/` over SSH. Load the updated function and preview it:
+
+```zsh
+source ~/.zshrc
+pewtersync --dry-run
+pewtersync
 ```
 
-`bootstrap` instala el motor en `.venv` y las colecciones en `.ansible`; esas
-carpetas se ignoran en Git. Usa Python 3.13 gestionado por uv, sin modificar el
-Python del sistema. `plan` usa el modo check de Ansible y muestra diferencias;
-`apply` pide la contraseña de sudo cuando hace falta.
+The source drive must be mounted. The function prefers Homebrew rsync, displays
+changes and transfer progress, and keeps interrupted transfers in
+`.rsync-partial` for the next run. It preserves file timestamps, permissions,
+and symlinks, using the destination account's ownership. macOS volume metadata
+and `.DS_Store` files are excluded. Trailing slashes copy the drive's contents
+directly into `pewter`, without adding a `CZM2` subdirectory.
 
-Para los servidores, desbloquear primero la clave SSH habitual:
+By default, destination-only files are kept. For an exact mirror, first preview
+`pewtersync --dry-run --delete`, then run `pewtersync --delete`. This deletes
+destination files missing from CZM2, except excluded paths. Other rsync options,
+such as `--bwlimit=20m`, can also be passed through.
+
+### Prepare Bagheera
+
+Rsync is already installed on Bagheera. `/srv/pewter` must be on storage large
+enough for the source data and writable by `jon`. If using a separate data disk,
+mount it there first, then run this **on Bagheera**:
+
+```sh
+sudo chown jon:jon /srv/pewter
+```
+
+On the sending Mac, unlock the existing SSH key and test the connection:
 
 ```sh
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519
-./dotfiles plan bagheera
-./dotfiles apply bagheera
-./dotfiles check bagheera
+ssh jon@bagheera 'test -w /srv/pewter && rsync --version'
 ```
 
-Cambiar `bagheera` por `hirayama`, `servers` o `all`. Los grupos comparten una
-contraseña de sudo por ejecución interactiva; usar perfiles individuales si
-sus contraseñas son diferentes. Desde la consola de un servidor también se
-puede clonar el repo, ejecutar `./bootstrap` y usar `--local` con su perfil.
+### Distribute to other computers
+
+Use one direction: `CZM2 -> Bagheera -> receiving computers`. Keep CZM2 as the
+source of truth; rsync does not merge conflicting edits from multiple machines.
+
+Each receiver needs rsync, SSH access to `jon@bagheera`, and a dedicated local
+destination directory. A receiver can pull its copy while it is online:
 
 ```sh
-./dotfiles apply hirayama --local
-./dotfiles plan servers --tags user
-./dotfiles apply bagheera --skip-tags workloads
-./dotfiles capture servers
+mkdir -p "$HOME/pewter"
+rsync -ah --no-owner --no-group --partial-dir=.rsync-partial --progress \
+    jon@bagheera:/srv/pewter/ "$HOME/pewter/"
 ```
 
-`capture` guarda un inventario para revisar en `.local/captures/`, fuera de Git.
-No convierte automáticamente lo encontrado en configuración deseada.
-
-## Qué se restaura
-
-- Un shell común con los tres colores, historial, atajos y estado de Git.
-  El Mac conserva Oh My Zsh, autosugerencias y resaltado de sintaxis. Los
-  plugins se fijan a los commits capturados. `~/.zshrc.local` permite añadidos
-  privados sin editar el archivo administrado.
-- Git, Neovim y los atajos de Rex. En el Mac también se restauran los ajustes
-  visuales de Rex —incluido el tema Dark+, SF Mono y tamaño 23—, Ghostty,
-  AeroSpace, atajos del sistema, teclado, trackpad, Finder y Dock.
-- Paquetes, cuenta `jon` con UID/GID 1000, claves públicas autorizadas,
-  SSH, zona horaria, Tailscale y persistencia de Rex en Linux. Se conservan
-  las preferencias de escritorio y entrada que se encontraron en dconf.
-- Montajes de datos por UUID y las carpetas compartidas `media`, `documents`
-  e `iMac Plato`. Samba comprueba el disco real antes de dar acceso y oculta
-  `lost+found`. Se conserva SELinux en Fedora.
-- El Compose de bagheera, con las dos imágenes actuales fijadas por digest,
-  y un servicio que espera al disco antes de arrancar los contenedores.
-
-Las tareas guardan copias de los archivos que sustituyen. Los montajes no
-formatean discos, no cambian propietarios de forma recursiva y no sustituyen
-datos de aplicaciones por carpetas vacías. Homebrew instala lo declarado sin
-eliminar otros paquetes ni actualizar los existentes por defecto.
-
-## Recuperación y GitHub
-
-- [Recuperar un equipo desde cero](docs/recovery.md)
-- [Ejecutar desde GitHub Actions](docs/github-actions.md)
-- [Inventario capturado y decisiones](docs/inventory.md)
-- [Secretos que deben estar en el gestor de contraseñas](docs/secrets.md)
-- [Sincronización CZM2 → Pewter](docs/pewter-sync.md)
-
-Esta es una receta de configuración sobre una instalación del sistema
-operativo. Los datos personales, las bases de datos y las licencias se
-recuperan de sus copias o proveedores. Las versiones del motor, plugins e
-imágenes están fijadas; los paquetes del sistema y Homebrew siguen sus
-repositorios, por lo que no hay compilación bit a bit ni generaciones de
-rollback como en NixOS. Homebrew [no ofrece lockfiles de versiones](https://docs.brew.sh/Brew-Bundle-and-Brewfile).
-
-## Cambiar la configuración
-
-| Archivo o carpeta | Qué cambiar |
-| --- | --- |
-| `inventory/host_vars/` | Diferencias entre equipos: usuario, color, discos, LAN y recursos compartidos |
-| `inventory/hosts.yml` | Direcciones SSH del sistema, distintas de los nodos embebidos de Rex |
-| `brewfile` | Paquetes y aplicaciones del Mac; `brewsync` lo abre y aplica sin podar paquetes |
-| `shell/zshrc` | Configuración y funciones comunes del shell |
-| `macos/preferences.json` | Preferencias permitidas del Mac; los datos binarios del tema usan base64 |
-| `macos/rex-release.yml` | Cliente Rex capturado, con URL y SHA-256 |
-| `workloads/bagheera/compose.yaml` | Servicios e imágenes del servidor multimedia |
-| `keys/` | Claves públicas de usuario y claves públicas conocidas de los servidores |
-| `roles/` | Implementación de la restauración |
-
-Los paquetes Stow originales siguen en el repo; `zsh/.zshrc` carga el shell
-común. La restauración administra archivos normales con sus copias de
-seguridad y conserva el contenido anterior de `.zshrc` en
-`.zshrc.before-dotfiles`. El script anterior `scripts/setup-hirayama.sh`
-queda para la migración histórica de `platoa`; el mantenimiento habitual usa
-`./dotfiles`.
-
-## Validación
+Alternatively, enable SSH login on each receiver and authorize a Bagheera SSH
+public key for its destination account. From Bagheera, push to each computer
+using its actual username, hostname, and destination path:
 
 ```sh
-./tests/run
+rsync -ah --no-owner --no-group --partial-dir=.rsync-partial --progress \
+    /srv/pewter/ USER@COMPUTER:/path/to/pewter/
 ```
 
-Comprueba la sintaxis de los playbooks y scripts, renderiza los dos perfiles
-Samba, verifica que las preferencias del Mac preservan claves ajenas y aplica
-el perfil de usuario dos veces en una carpeta temporal. La segunda aplicación
-debe producir cero cambios, conservando el contenido y destino del enlace
-original. GitHub ejecuta estas comprobaciones sin acceder a los equipos.
+Start with `--dry-run`. Add `--delete` only when that destination should exactly
+mirror the server. These transfers keep their own `.rsync-partial` files out of
+the copies.
 
-Las restauraciones reales desde GitHub son manuales y se ejecutan solo desde
-`main`, usando las credenciales de cada entorno. El código no instala runners
-persistentes ni configura sudo sin contraseña.
+Rsync runs when invoked. For automatic pulls, schedule each receiver's command
+with a macOS launchd agent or a Linux systemd timer, for example every 15 minutes.
+For server-driven pushes, schedule the push commands on Bagheera or run them
+after a successful upload. Scheduled jobs need absolute executable paths and
+SSH authentication that works without an interactive password or passphrase
+prompt. Avoid overlapping syncs to the same destination; a completed upload
+should precede distribution when receivers need a consistent set of files.
 
-La [configuración de Neovim](nvim/.config/nvim/README.md) conserva la
-documentación de Mist. Rex carga [init.lua](rex/.config/rex/init.lua); tras
-cambiarlo, ejecutar `rex config check` y `rex config reload` en ese equipo.
+See the [rsync manual](https://rsync.samba.org/ftp/rsync/rsync.1.html),
+[Apple's launchd guide](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html),
+and [systemd timer documentation](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html).
+
+## Set up Hirayama
+
+[`scripts/setup-hirayama.sh`](scripts/setup-hirayama.sh) configures the Debian 13
+host Hirayama. A copy is placed at `/home/platoa/setup-hirayama.sh` on that host.
+Run it there:
+
+```sh
+sudo bash ~/setup-hirayama.sh
+sudo reboot
+```
+
+After reboot, log in as `jon` with the same password, then run
+`sudo bash ~/setup-hirayama.sh` again to choose the SMB password. Connect from
+Finder with **Go → Connect to Server** and `smb://hirayama/iMac%20Plato`, using
+`jon` and that SMB password. Over Tailscale, use
+`smb://hirayama.mau-skate.ts.net/iMac%20Plato`.
+
+New setups hide the filesystem's `lost+found` directory over SMB. To apply
+that setting to an existing setup, run:
+
+```sh
+sudo bash ~/setup-hirayama.sh --hide-lost-found
+```
+
+This backs up and updates the share configuration, preserves existing veto
+patterns, and reloads Samba without changing your password. Disconnect and
+reconnect the share in Finder afterward. The directory stays on the disk.
+
+The script installs zsh and copies Bagheera's two-line prompt with orange
+(ANSI color 208) in place of purple. It keeps UID/GID 1000, the login password,
+and `/home/platoa`, preserving existing application paths. The account and
+primary group become `jon` at boot before login sessions start, and the rename
+service then disables itself.
+
+The existing ext4 drive labeled `iMac Plato` is mounted at `/srv/imac-plato`
+by UUID through `/etc/fstab`. The script leaves its current desktop mount in
+place until reboot and does not format the disk or recursively change its
+permissions. Samba allows authenticated read/write access for `jon` and checks
+that the correct disk is mounted before opening the share. UFW permits TCP 445
+from the current Wi-Fi LAN (`192.168.29.0/24` on `wlp3s0`) and on `tailscale0`.
+Update that LAN rule if the host changes networks.
+
+Backups of account files, fstab, and any existing zsh configuration are kept
+under `/var/backups/hirayama-setup.*`. The script refuses to replace an existing
+Samba configuration that it did not create. If the rename fails, log in as
+`platoa` and inspect `journalctl -b -u hirayama-rename`.
+
+The boot rename follows the [Debian usermod requirements](https://manpages.debian.org/trixie/passwd/usermod.8.en.html).
+SMB credentials use [Samba's smbpasswd](https://www.samba.org/samba/docs/current/man-html/smbpasswd.8.html).
+
+## Rex
+
+The `rex` Stow package tracks [init.lua](rex/.config/rex/init.lua). Install it with:
+
+```sh
+cd ~/.dotfiles
+stow --target="$HOME" rex
+```
+
+Stow links `~/.config/rex` to `rex/.config/rex` in this repo. Editing either path
+changes the same files, so future customizations appear in `git diff`.
+Option + Down shows the next tab; Option + Up shows the previous tab.
+
+After editing, run these commands in a Rex terminal on the machine running the server:
+
+```sh
+rex config check
+rex config reload
+```
+
+The check validates the file without applying it. Reload applies it to connected
+clients; Rex does not watch for file changes. You can check an unstowed draft with
+`rex config check ~/.dotfiles/rex/.config/rex/init.lua`.
+
+Rex runs `init.lua` as Lua on the server. Use `rex.bind` for shortcuts and
+`rex.action` for custom actions. As the config grows, `require("keys")` can load a
+`keys.lua` file beside `init.lua`. GUI shortcuts override Lua bindings.
+
+This package tracks the Lua configuration. Captured macOS appearance settings,
+including the Rex font and themes, are saved in [macos/preferences.json](macos/preferences.json).
+If `XDG_CONFIG_HOME` is set, Rex looks under that directory instead of `~/.config`;
+`REX_CONFIG` can override the file path in the server's environment.
+
+See the [Rex configuration documentation](https://www.superlogical.com/rex/docs/customize/config)
+and [CLI guide](https://www.superlogical.com/rex/docs/automate/cli). Rex adds its CLI
+to the PATH of terminals it opens.
+
+## Neovim in Rex
+
+Run `nvim some/file.txt` in a Rex pane. Neovim uses Rex's live terminal palette,
+including the statusline and Mist notes. See the [Neovim configuration](nvim/.config/nvim/README.md)
+for theme and performance details.
+
+## Captured settings
+
+The configuration collected from the three machines is retained as a starting
+point for the Bash setup scripts:
+
+- [Machine and disk inventory](docs/inventory.md)
+- [Credentials and data to recover separately](docs/secrets.md)
+- macOS application versions and selected preferences in `macos/`
+- Linux desktop preferences in `desktop/`
+- Public SSH keys and known server identities in `keys/`
+- Bagheera's Compose declaration in `workloads/bagheera/compose.yaml`
+
+`macos/preferences.py` is a standalone helper for those selected preferences.
+Its focused tests run with `python3 -m unittest discover -s tests`.

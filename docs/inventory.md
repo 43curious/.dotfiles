@@ -23,42 +23,31 @@ se trasplantan sus UUID a una reinstalación.
 
 ## Configuraciones recogidas
 
-- Los CLI declarados del Mac coincidían con Homebrew. Las aplicaciones GUI
-  estaban instaladas fuera de él; se añadieron casks para las recuperables y
-  se registraron nombres y versiones en `macos/applications.json`.
+- Los CLI declarados del Mac coincidían con Homebrew. Los nombres y versiones
+  de las aplicaciones se guardan en `macos/applications.json`.
 - macOS: atajos simbólicos, fuentes de entrada seleccionadas, gestos del
   trackpad integrado/Bluetooth y preferencias de Finder y Dock, sin copiar
   dominios completos que puedan contener sesiones o documentos recientes.
-- Rex: Dark+ migrado de Ghostty, SF Mono a 23 puntos, cursor de bloque,
+- Rex: tema Dark+, SF Mono a 23 puntos, cursor de bloque,
   paneles, pestañas y atajos. Se excluyeron sesión enfocada, actividad,
-  geometría y datos de confianza. Se fija el cliente Mac build 1973 por hash.
-  En Linux se usa el instalador oficial y su repositorio nativo `preview`
-  cuando Rex falta; un binario ya instalado se conserva.
-- Ghostty: el enlace existente apuntaba a una carpeta ausente. Se reconstruyó
-  el archivo desde el tema y tipografía conservados en Rex; no se afirma
-  haber recuperado el original perdido.
+  geometría y datos de confianza. El archivo `macos/rex-release.yml` conserva
+  la URL y el hash del instalador Mac build 1973.
 - Servidores: prompts, colores, atajos, historial, Samba, montajes, servicios
   de Rex y las preferencias explícitas de interfaz e idioma de dconf. No se
   exportó toda la base de dconf.
-- Neovim del Mac es 0.12.6. Los servidores usan ese release oficial verificado
-  por SHA-256 en `/opt/neovim`, evitando que el Neovim anterior de Debian 13
-  impida cargar la configuración actual de LazyVim.
+- Neovim del Mac es 0.12.6; su configuración y lockfile de plugins están
+  guardados en `nvim/`.
 - Bagheera: Compose activo de `/home/jon/compose.yaml`, rutas de estado y
   digests de las dos imágenes, incluida qBittorrent 5.2.4. Se conservan
-  puertos y modos de red; se añade el arranque detrás del disco.
+  puertos, modos de red y rutas de datos en `workloads/bagheera/compose.yaml`.
 
-## Organización
-
-Ansible evita construir otro gestor de instalación, comparación de archivos
-y ejecución SSH. `dotfiles` ofrece perfiles y operaciones; las diferencias
-viven en el inventario y la implementación en roles compartidos.
+## Configuración conservada
 
 La cuenta institucional y contraseñas se recuperan por sus procedimientos.
 Los servidores conservan UID/GID 1000. Hirayama conserva `/home/platoa` con
-usuario `jon`; ajustar ese valor al preparar otra instalación si se quiere
+usuario `jon`; revisar esa ruta al preparar otra instalación si se quiere
 `/home/jon`.
 
-Se conservan los paquetes Stow anteriores, con un shell común y copias de
-seguridad. Los paquetes se instalan de forma aditiva. Los plugins e imágenes
-cambian mediante referencias revisadas en Git, sin seguir `latest` durante
-la recuperación.
+Los paquetes Stow y el `.zshrc` original se mantienen como configuración
+principal. Las preferencias capturadas y el Compose son archivos independientes
+que pueden reutilizarse en los próximos scripts de Bash.

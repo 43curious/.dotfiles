@@ -2,7 +2,7 @@
 
 El gestor habitual es la fuente para recuperar credenciales. El repo solo
 lleva claves públicas, UUID, preferencias seleccionadas y configuración.
-`.local/`, `.ansible/`, `.venv/`, `secrets/` y `backups/` están ignorados.
+`.local/`, `secrets/` y `backups/` están ignorados.
 
 | Entrada en el gestor | Se necesita para |
 | --- | --- |
@@ -15,10 +15,9 @@ lleva claves públicas, UUID, preferencias seleccionadas y configuración.
 | Cliente y secreto OAuth de Tailscale para CI | `TS_OAUTH_CLIENT_ID` y `TS_OAUTH_SECRET` |
 | Licencias y cuentas de Adobe, Apple, Resolve, etc. | Recuperar las aplicaciones del Mac |
 
-`DOTFILES_BECOME_PASSWORD` permite inyectar la contraseña de sudo desde el
-gestor al proceso. `DOTFILES_SMB_PASSWORD` crea la cuenta SMB si falta.
-No escribirlas en archivos versionados ni como argumentos visibles.
-En uso interactivo es más sencillo dejar que sudo y `smbpasswd` pregunten.
+Consultar las contraseñas en el gestor cuando hagan falta. No escribirlas en
+archivos versionados ni como argumentos visibles. En uso interactivo, sudo y
+`smbpasswd` pueden pedirlas directamente.
 
 ## Datos que requieren una copia aparte
 

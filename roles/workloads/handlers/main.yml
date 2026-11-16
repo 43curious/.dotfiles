@@ -1,6 +1,0 @@
----
-- name: Apply Bagheera containers
-  ansible.builtin.systemd_service:
-    name: dotfiles-containers
-    state: reloaded
-  become: true

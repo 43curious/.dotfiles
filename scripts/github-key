@@ -14,4 +14,4 @@ cp "$key_path.pub" "$repo_dir/keys/github-actions.pub"
 chmod 0644 "$repo_dir/keys/github-actions.pub"
 printf '\nPrivate key: %s\n' "$key_path"
 printf 'Save it in your password manager and the GitHub secret DOTFILES_SSH_KEY.\n'
-printf 'Commit only keys/github-actions.pub, then apply each profile from your Mac.\n'
+printf 'Commit only keys/github-actions.pub and authorize that public key on the target machines.\n'

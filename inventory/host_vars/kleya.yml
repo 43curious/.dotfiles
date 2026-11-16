@@ -1,6 +1,0 @@
-dotfiles_distribution: MacOSX
-dotfiles_user: jcastro
-dotfiles_home: /Users/jcastro
-dotfiles_group: "{{ ansible_facts.user_gid }}"
-dotfiles_prompt_color: 14
-dotfiles_macos_preferences: macos/preferences.json
