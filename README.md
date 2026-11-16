@@ -5,6 +5,7 @@ This dotfiles [stow guide](https://www.jakewiesler.com/blog/managing-dotfiles) h
 
 My dotfiles have the config for the following:
 - Git config
+- [Codex instructions](codex/.codex/AGENTS.md)
 - My .zsrhc
 - [Oh My Zsh](https://ohmyz.sh/) for shell customization with the following extensions
 	- [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
@@ -31,6 +32,18 @@ stops on failure, so cleanup only runs after installation succeeds. Quitting
 with `:q!` continues using the file already saved on disk.
 
 See the [Homebrew Bundle documentation](https://docs.brew.sh/Brew-Bundle-and-Brewfile).
+
+## Codex
+
+The `codex` Stow package links [AGENTS.md](codex/.codex/AGENTS.md) to
+`~/.codex/AGENTS.md`. Install it with:
+
+```sh
+cd ~/.dotfiles
+stow --target="$HOME" codex
+```
+
+Editing either path updates the same tracked instructions file.
 
 ## Pewter file sync
 
