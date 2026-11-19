@@ -7,4 +7,5 @@ __pycache__/
 *.age
 .*.swp
 *~
+/rex/.config/rex/projects.json
 
