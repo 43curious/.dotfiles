@@ -7,6 +7,6 @@ rex.bind("alt+up", "client.tab.previous")
 
 -- https://github.com/almonk/rex-projects (requires control API revision 17).
 require("projects").setup {
-  key = "ctrl+cmd+n",
   roots = { "~/Dev" },
 }
+rex.bind("ctrl+cmd+n", "new_project_session")

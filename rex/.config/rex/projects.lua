@@ -12,10 +12,13 @@
 --
 --     require("projects")
 --
--- Optional settings, before or after the require:
+-- To open the project picker with a shortcut, bind its action in init.lua:
+--
+--     rex.bind("ctrl+cmd+n", "new_project_session")
+--
+-- To configure the module, use setup:
 --
 --     require("projects").setup{
---       key       = "alt+cmd+n",        -- false to bind nothing
 --       worktrees = "~/.rex/worktrees", -- where new worktrees are made
 --       roots     = { "~/Code" },       -- folders whose repositories are
 --                                       -- listed without being added
@@ -40,14 +43,10 @@ end
 
 -- The settings. A call to M.setup replaces the ones it names.
 local config = {
-  key = "alt+cmd+n",
   worktrees = nil, -- nil means <home>/.rex/worktrees
   roots = {},
   state_file = nil, -- nil means <config dir>/rex/projects.json
 }
-
--- The key that is bound now, so that setup can move it.
-local bound_key = nil
 
 ---------------------------------------------------------------------------
 -- Platform
@@ -723,30 +722,14 @@ rex.action{
 -- Setup
 ---------------------------------------------------------------------------
 
--- bind_key moves the key for New Session in Project… to key, or removes it
--- for false.
-local function bind_key(key)
-  -- Removing a binding works only while the file loads, which is when setup
-  -- runs. pcall keeps a refusal from stopping the rest of init.lua.
-  if bound_key ~= nil then pcall(rex.unbind, bound_key) end
-  bound_key = nil
-  if key then
-    rex.bind(key, "new_project_session")
-    bound_key = key
-  end
-end
-
 -- M.setup changes the settings it is given and leaves the rest as they were.
 function M.setup(opts)
   opts = opts or {}
   if opts.worktrees ~= nil then config.worktrees = opts.worktrees end
   if opts.roots ~= nil then config.roots = opts.roots end
   if opts.state_file ~= nil then config.state_file = opts.state_file; state = nil end
-  if opts.key ~= nil then bind_key(opts.key) end
   return M
 end
-
-bind_key(config.key)
 
 -- Pure helpers, for the tests in test/.
 M._internal = {
