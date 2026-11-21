@@ -6,13 +6,24 @@ This dotfiles [stow guide](https://www.jakewiesler.com/blog/managing-dotfiles) h
 My dotfiles have the config for the following:
 - Git config
 - [Codex instructions](codex/.codex/AGENTS.md)
-- My .zsrhc
-- [Oh My Zsh](https://ohmyz.sh/) for shell customization with the following extensions
-	- [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-	- [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
+- My [fish configuration](fish/.config/fish), using fish's built-in completions, autosuggestions, and syntax highlighting
 - My [Rex](https://www.superlogical.com/rex/) Lua configuration
 - [neovim ](https://neovim.io/) theme and plugins
 - My [SKHD](https://github.com/koekeishiya/skhd) config for navigation
+
+## Fish
+
+On macOS, install `fish` and `stow` with Homebrew. On Bagheera, install them with
+`sudo dnf install fish stow`. Move aside any conflicting fish files, then link the
+configuration from the dotfiles checkout with `stow --target="$HOME" fish`.
+
+To set the login shell, check that `command -v fish` returns a path listed in
+`/etc/shells`, then run `chsh -s "$(command -v fish)"` from your current zsh or
+Bash session. If the path is missing, an administrator must add it first.
+
+The two-line prompt shows the full path and Git branch. The path and arrow are
+cyan on macOS and purple on Bagheera. The branch is gray in a clean checkout
+and red when there are changes.
 
 ## Homebrew
 
@@ -48,10 +59,9 @@ Editing either path updates the same tracked instructions file.
 ## Pewter file sync
 
 `pewtersync` copies the contents of `/Volumes/CZM2/` to
-`jon@bagheera:/srv/pewter/` over SSH. Load the updated function and preview it:
+`jon@bagheera:/srv/pewter/` over SSH. Preview the transfer from fish:
 
-```zsh
-source ~/.zshrc
+```fish
 pewtersync --dry-run
 pewtersync
 ```
@@ -152,8 +162,8 @@ This backs up and updates the share configuration, preserves existing veto
 patterns, and reloads Samba without changing your password. Disconnect and
 reconnect the share in Finder afterward. The directory stays on the disk.
 
-The script installs zsh and copies Bagheera's two-line prompt with orange
-(ANSI color 208) in place of purple. It keeps UID/GID 1000, the login password,
+The script installs zsh and configures a two-line prompt with orange
+(ANSI color 208). It keeps UID/GID 1000, the login password,
 and `/home/platoa`, preserving existing application paths. The account and
 primary group become `jon` at boot before login sessions start, and the rename
 service then disables itself.

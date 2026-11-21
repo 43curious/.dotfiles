@@ -1,4 +1,5 @@
 # CLI tools
+brew "fish"
 brew "neovim"
 brew "stow"
 brew "zig"
